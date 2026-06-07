@@ -8,6 +8,7 @@ export const CATEGORIES = [
   "Spring Semester",
   "Spring Tour",
   "World Tour",
+  "Other",
 ] as const
 
 export const NAMES = [
