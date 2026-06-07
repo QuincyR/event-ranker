@@ -65,7 +65,7 @@ export default function AddExperiencePage() {
                 type="text"
                 value={name}
                 onChange={(e) => { setName(e.target.value); setError("") }}
-                placeholder="e.g., World Tour Opening Night"
+                placeholder="e.g. Space Needle"
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
               />
             </div>
@@ -78,7 +78,7 @@ export default function AddExperiencePage() {
                 type="text"
                 value={location}
                 onChange={(e) => { setLocation(e.target.value); setError("") }}
-                placeholder="e.g., Boston, MA or London, UK"
+                placeholder="e.g. Seattle, WA or Lima, Peru"
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
               />
             </div>

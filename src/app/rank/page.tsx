@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
 
-type Event = { id: string; name: string }
+type Event = { id: string; name: string; location?: string | null; category?: string | null }
 
 interface RankingState {
   phase: "loading" | "ranking" | "done"
@@ -185,14 +185,20 @@ export default function RankPage() {
               </p>
             ) : (
               <ol className="space-y-3">
-                {state.ranked.map((event, i) => (
-                  <li key={event.id} className="flex items-center gap-4">
-                    <span className="text-2xl font-bold text-gray-200 w-8 text-right">
-                      {i + 1}
-                    </span>
-                    <span className="text-gray-800 font-medium">{event.name}</span>
-                  </li>
-                ))}
+                {state.ranked.map((event, i) => {
+                  const meta = [event.category, event.location].filter(Boolean).join(" · ")
+                  return (
+                    <li key={event.id} className="flex items-start gap-4">
+                      <span className="text-2xl font-bold text-gray-200 w-8 text-right shrink-0 pt-0.5">
+                        {i + 1}
+                      </span>
+                      <div>
+                        <p className="text-gray-800 font-medium">{event.name}</p>
+                        {meta && <p className="text-xs text-gray-400 mt-0.5">{meta}</p>}
+                      </div>
+                    </li>
+                  )
+                })}
               </ol>
             )}
           </div>
@@ -258,6 +264,11 @@ export default function RankPage() {
                 className="w-full max-w-sm p-8 bg-white rounded-2xl shadow-sm border-2 border-black text-center hover:bg-gray-50 transition-colors"
               >
                 <span className="text-xl font-semibold text-gray-900">{current?.name}</span>
+                {[current?.category, current?.location].filter(Boolean).length > 0 && (
+                  <p className="text-xs text-gray-400 mt-1.5">
+                    {[current?.category, current?.location].filter(Boolean).join(" · ")}
+                  </p>
+                )}
                 <p className="text-sm text-gray-400 mt-2">Tap to confirm first ranking</p>
               </button>
             </div>
@@ -274,6 +285,11 @@ export default function RankPage() {
                 }}
               >
                 <span className="text-xl font-semibold text-gray-900">{current?.name}</span>
+                {[current?.category, current?.location].filter(Boolean).length > 0 && (
+                  <p className="text-xs text-gray-400 mt-1.5">
+                    {[current?.category, current?.location].filter(Boolean).join(" · ")}
+                  </p>
+                )}
               </button>
               <button
                 onClick={() => handleButtonClick(false)}
@@ -286,6 +302,11 @@ export default function RankPage() {
                 }}
               >
                 <span className="text-xl font-semibold text-gray-900">{opponent.name}</span>
+                {[opponent.category, opponent.location].filter(Boolean).length > 0 && (
+                  <p className="text-xs text-gray-400 mt-1.5">
+                    {[opponent.category, opponent.location].filter(Boolean).join(" · ")}
+                  </p>
+                )}
               </button>
             </div>
           )}

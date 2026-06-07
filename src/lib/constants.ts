@@ -1,13 +1,13 @@
 export const CATEGORIES = [
   "Retreat",
   "Boston Mini-Tour",
+  "Fall Semester",
   "Fall Tour",
   "New Jersey Mini-Tour",
   "Winter Tour",
+  "Spring Semester",
   "Spring Tour",
   "World Tour",
-  "Fall Semester",
-  "Spring Semester",
 ] as const
 
 export const NAMES = [
