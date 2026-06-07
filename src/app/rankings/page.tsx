@@ -106,10 +106,14 @@ export default function RankingsPage() {
   const chronoNoDate = allRankings.filter((x) => !x.event.date)
 
   const categoryFiltered = selectedCategory
-    ? allRankings
-        .filter((x) => x.event.category === selectedCategory)
-        .filter((x) => x.rankedByCount > 0)
-        .map((x, i) => ({ ...x, categoryRank: i + 1 }))
+    ? (() => {
+        const filtered = allRankings.filter((x) => x.event.category === selectedCategory)
+        let catRank = 0
+        return filtered.map((x) => ({
+          ...x,
+          categoryRank: x.rankedByCount > 0 ? ++catRank : null,
+        }))
+      })()
     : []
 
   if (!user || loading) return null
@@ -214,11 +218,18 @@ export default function RankingsPage() {
                       : `${selectedPerson} hasn't signed in yet.`}
                   </p>
                 ) : (
-                  <ol className="space-y-4">
-                    {personRanking.map((event, i) => (
-                      <EventRow key={event.id} rank={i + 1} event={event} />
-                    ))}
-                  </ol>
+                  <>
+                    <ol className="space-y-4">
+                      {personRanking.map((event, i) => (
+                        <EventRow key={event.id} rank={i + 1} event={event} />
+                      ))}
+                    </ol>
+                    {allRankings.length > personRanking.length && (
+                      <p className="text-xs text-gray-400 text-center pt-4 mt-4 border-t border-gray-50">
+                        Missing {allRankings.length - personRanking.length} experience{allRankings.length - personRanking.length !== 1 ? "s" : ""} from their ranking
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -311,7 +322,7 @@ export default function RankingsPage() {
                 <h2 className="font-semibold text-gray-900 mb-5">{selectedCategory}</h2>
                 {categoryFiltered.length === 0 ? (
                   <p className="text-gray-400 text-sm text-center py-6">
-                    No ranked {selectedCategory} experiences yet.
+                    No {selectedCategory} experiences added yet.
                   </p>
                 ) : (
                   <ol className="space-y-4">
