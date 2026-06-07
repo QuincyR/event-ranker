@@ -3,12 +3,20 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 
+const NAMES = [
+  "Emily", "Eunice", "Peighton", "Yixiao", "Tabatha",
+  "Ben", "Noah", "Elijah", "Charlie", "Lucas",
+  "Quincy", "Joseph", "Brandon", "Gui",
+]
+
 type Event = { id: string; name: string; createdAt: string }
 type User = { id: string; name: string }
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null)
-  const [nameInput, setNameInput] = useState("")
+  const [selectedName, setSelectedName] = useState("")
+  const [password, setPassword] = useState("")
+  const [passwordError, setPasswordError] = useState("")
   const [events, setEvents] = useState<Event[]>([])
   const [newEvent, setNewEvent] = useState("")
   const [loading, setLoading] = useState(false)
@@ -27,16 +35,21 @@ export default function Home() {
 
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault()
-    if (!nameInput.trim()) return
+    setPasswordError("")
+    if (!selectedName) return
+    if (password !== "testing") {
+      setPasswordError("Incorrect password")
+      return
+    }
     const res = await fetch("/api/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: nameInput.trim() }),
+      body: JSON.stringify({ name: selectedName }),
     })
     const u = await res.json()
     setUser(u)
     localStorage.setItem("user", JSON.stringify(u))
-    setNameInput("")
+    setPassword("")
   }
 
   function handleSignOut() {
@@ -88,20 +101,35 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <form onSubmit={handleJoin} className="flex gap-3">
-              <input
-                type="text"
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
-                placeholder="Enter your name to get started"
-                className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
-              />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-              >
-                Join
-              </button>
+            <form onSubmit={handleJoin} className="flex flex-col gap-3">
+              <div className="flex gap-3">
+                <select
+                  value={selectedName}
+                  onChange={(e) => setSelectedName(e.target.value)}
+                  className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black bg-white text-gray-700"
+                >
+                  <option value="">Select your name...</option>
+                  {NAMES.map((name) => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setPasswordError("") }}
+                  placeholder="Password"
+                  className="w-36 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                >
+                  Join
+                </button>
+              </div>
+              {passwordError && (
+                <p className="text-red-500 text-sm">{passwordError}</p>
+              )}
             </form>
           )}
         </div>

@@ -26,6 +26,7 @@ export default function RankPage() {
     lo: 0,
     hi: 0,
   })
+  const [history, setHistory] = useState<RankingState[]>([])
 
   const saveRanking = useCallback(async (userId: string, ranked: Event[]) => {
     await fetch(`/api/users/${userId}/ranking`, {
@@ -76,6 +77,8 @@ export default function RankPage() {
   function handleChoice(preferCurrent: boolean) {
     if (state.phase !== "ranking" || !state.current || !user) return
 
+    setHistory((h) => [...h, state])
+
     const { ranked, current, toRank, lo, hi } = state
     const mid = Math.floor((lo + hi) / 2)
 
@@ -89,7 +92,6 @@ export default function RankPage() {
     }
 
     if (newLo >= newHi) {
-      // Insert current at position newLo
       const newRanked = [
         ...ranked.slice(0, newLo),
         current,
@@ -116,6 +118,19 @@ export default function RankPage() {
     }
 
     setState({ ...state, lo: newLo, hi: newHi })
+  }
+
+  function handleUndo() {
+    if (history.length === 0) return
+    const prev = history[history.length - 1]
+
+    // If undoing a placement, roll back the DB too
+    if (user && prev.ranked.length < state.ranked.length) {
+      saveRanking(user.id, prev.ranked)
+    }
+
+    setHistory((h) => h.slice(0, -1))
+    setState(prev)
   }
 
   if (!user) {
@@ -184,9 +199,18 @@ export default function RankPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-12">
-        <Link href="/" className="text-sm text-gray-400 hover:text-gray-600 mb-8 inline-block">
-          ← Back
-        </Link>
+        <div className="flex items-center justify-between mb-8">
+          <Link href="/" className="text-sm text-gray-400 hover:text-gray-600">
+            ← Back
+          </Link>
+          <button
+            onClick={handleUndo}
+            disabled={history.length === 0}
+            className="text-sm text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            ↩ Undo
+          </button>
+        </div>
 
         <div className="mb-8">
           <p className="text-sm text-gray-400 mb-1">
@@ -204,7 +228,6 @@ export default function RankPage() {
           Which do you prefer?
         </h2>
 
-        {/* When ranked is empty, just confirm the first event */}
         {ranked.length === 0 || !opponent ? (
           <div className="flex justify-center">
             <button
