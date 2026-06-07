@@ -42,8 +42,17 @@ export default function RankPage() {
     setUser(u)
 
     fetch(`/api/users/${u.id}/ranking`)
-      .then((r) => r.json())
-      .then(({ ranked, unranked }: { ranked: Event[]; unranked: Event[] }) => {
+      .then((r) => {
+        if (!r.ok) {
+          localStorage.removeItem("user")
+          window.location.href = "/"
+          return null
+        }
+        return r.json()
+      })
+      .then((data) => {
+        if (!data) return
+        const { ranked, unranked } = data as { ranked: Event[]; unranked: Event[] }
         if (unranked.length === 0) {
           setState({ phase: "done", ranked, toRank: [], current: null, lo: 0, hi: 0 })
           return
@@ -57,6 +66,10 @@ export default function RankPage() {
           lo: 0,
           hi: ranked.length,
         })
+      })
+      .catch(() => {
+        localStorage.removeItem("user")
+        window.location.href = "/"
       })
   }, [])
 
