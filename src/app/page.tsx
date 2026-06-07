@@ -1,16 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 const NAMES = [
   "Emily", "Eunice", "Peighton", "Yixiao", "Tabatha",
   "Ben", "Noah", "Elijah", "Charlie", "Lucas",
   "Quincy", "Joseph", "Brandon", "Gui",
 ]
-
-type Event = { id: string; name: string; createdAt: string }
-type User = { id: string; name: string }
 
 function EyeIcon({ open }: { open: boolean }) {
   return open ? (
@@ -25,157 +22,78 @@ function EyeIcon({ open }: { open: boolean }) {
   )
 }
 
-export default function Home() {
-  const [user, setUser] = useState<User | null>(null)
+export default function SignInPage() {
   const [selectedName, setSelectedName] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  const [passwordError, setPasswordError] = useState("")
-  const [events, setEvents] = useState<Event[]>([])
-  const [newEvent, setNewEvent] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const router = useRouter()
 
   useEffect(() => {
     const stored = localStorage.getItem("user")
-    if (stored) setUser(JSON.parse(stored))
-    fetchEvents()
-  }, [])
-
-  async function fetchEvents() {
-    const res = await fetch("/api/events")
-    const data = await res.json()
-    setEvents(data)
-  }
+    if (stored) router.replace("/home")
+  }, [router])
 
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault()
-    setPasswordError("")
-    if (!selectedName) return
-    if (password !== "testing") {
-      setPasswordError("Incorrect password")
-      return
-    }
+    setError("")
+    if (!selectedName) { setError("Please select your name"); return }
+    if (password !== "testing") { setError("Incorrect password"); return }
+
     const res = await fetch("/api/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: selectedName }),
     })
     const u = await res.json()
-    setUser(u)
     localStorage.setItem("user", JSON.stringify(u))
-    setPassword("")
-  }
-
-  async function handleAddEvent(e: React.FormEvent) {
-    e.preventDefault()
-    if (!newEvent.trim() || loading) return
-    setLoading(true)
-    await fetch("/api/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newEvent.trim() }),
-    })
-    setNewEvent("")
-    await fetchEvents()
-    setLoading(false)
+    router.push("/home")
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto px-4 py-10">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Events</h1>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        <h1 className="text-3xl font-bold text-gray-900 text-center mb-8">WhiffenBeli</h1>
 
-        {/* User section */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-          <p className="text-gray-700 leading-relaxed mb-4">
-            Welcome to WhiffenBeli, the place to rank (and reminisce about) Whiffenpoof moments throughout the year. Rank moments, add any you think are missing, and compare your rankings with the other Whiffs!
-          </p>
-          {user ? (
-            <Link
-              href="/rank"
-              className="inline-block px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-            >
-              Rank Events →
-            </Link>
-          ) : (
-            <form onSubmit={handleJoin} className="flex flex-col gap-3">
-              <div className="flex gap-3">
-                <select
-                  value={selectedName}
-                  onChange={(e) => setSelectedName(e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black bg-white text-gray-700"
-                >
-                  <option value="">Select your name...</option>
-                  {NAMES.map((name) => (
-                    <option key={name} value={name}>{name}</option>
-                  ))}
-                </select>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => { setPassword(e.target.value); setPasswordError("") }}
-                    placeholder="Password"
-                    className="w-36 pl-4 pr-9 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <EyeIcon open={showPassword} />
-                  </button>
-                </div>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                >
-                  Join
-                </button>
-              </div>
-              {passwordError && (
-                <p className="text-red-500 text-sm">{passwordError}</p>
-              )}
-            </form>
-          )}
-        </div>
-
-        {/* Events section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h2 className="font-semibold text-gray-900 mb-5">
-            Events{" "}
-            <span className="text-gray-400 font-normal text-sm">({events.length})</span>
-          </h2>
+          <form onSubmit={handleJoin} className="flex flex-col gap-3">
+            <select
+              value={selectedName}
+              onChange={(e) => { setSelectedName(e.target.value); setError("") }}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black bg-white text-gray-700"
+            >
+              <option value="">Select your name...</option>
+              {NAMES.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
 
-          <form onSubmit={handleAddEvent} className="flex gap-3 mb-5">
-            <input
-              type="text"
-              value={newEvent}
-              onChange={(e) => setNewEvent(e.target.value)}
-              placeholder="Add an event..."
-              className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setError("") }}
+                placeholder="Password"
+                className="w-full pl-4 pr-10 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <EyeIcon open={showPassword} />
+              </button>
+            </div>
+
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+
             <button
               type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
+              className="w-full py-2.5 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
             >
-              Add
+              Sign in
             </button>
           </form>
-
-          {events.length === 0 ? (
-            <p className="text-gray-400 text-sm text-center py-6">No events yet. Add the first one!</p>
-          ) : (
-            <ul className="space-y-2">
-              {events.map((event, i) => (
-                <li key={event.id} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
-                  <span className="text-xs text-gray-300 w-5 text-right">{i + 1}</span>
-                  <span className="text-gray-800">{event.name}</span>
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
       </div>
     </div>

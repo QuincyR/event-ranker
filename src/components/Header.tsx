@@ -18,7 +18,7 @@ export function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-10 bg-white border-b border-gray-100">
       <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-        <Link href="/" className="font-bold text-gray-900 text-lg tracking-tight">
+        <Link href={user ? "/home" : "/"} className="font-bold text-gray-900 text-lg tracking-tight">
           WhiffenBeli
         </Link>
         {user && (

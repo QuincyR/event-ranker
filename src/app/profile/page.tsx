@@ -103,7 +103,7 @@ export default function ProfilePage() {
             </div>
           )}
           <Row
-            href="/"
+            href="/home"
             label="All Events"
             description="Browse and add to the shared event list"
           />
