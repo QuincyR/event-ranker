@@ -28,6 +28,7 @@ export default function RankPage() {
   })
   const [history, setHistory] = useState<RankingState[]>([])
   const [flash, setFlash] = useState<"current" | "opponent" | null>(null)
+  const [cardVisible, setCardVisible] = useState(true)
 
   const saveRanking = useCallback(async (userId: string, ranked: Event[]) => {
     await fetch(`/api/users/${userId}/ranking`, {
@@ -78,9 +79,11 @@ export default function RankPage() {
   function handleButtonClick(preferCurrent: boolean) {
     if (flash) return
     setFlash(preferCurrent ? "current" : "opponent")
+    setTimeout(() => setCardVisible(false), 150)
     setTimeout(() => {
       setFlash(null)
       handleChoice(preferCurrent)
+      requestAnimationFrame(() => requestAnimationFrame(() => setCardVisible(true)))
     }, 500)
   }
 
@@ -224,7 +227,7 @@ export default function RankPage() {
 
         <div className="mb-8">
           <p className="text-sm text-gray-400 mb-1">
-            Ranking {progress + 1} of {totalEvents}
+            {Math.round((progress / totalEvents) * 100)}% ranked
           </p>
           <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
             <div
@@ -238,43 +241,55 @@ export default function RankPage() {
           Which do you prefer?
         </h2>
 
-        {ranked.length === 0 || !opponent ? (
-          <div className="flex justify-center">
-            <button
-              onClick={() => handleButtonClick(true)}
-              disabled={!!flash}
-              className="w-full max-w-sm p-8 bg-white rounded-2xl shadow-sm border-2 border-black text-center hover:bg-gray-50 transition-all duration-300"
-            >
-              <span className="text-xl font-semibold text-gray-900">{current?.name}</span>
-              <p className="text-sm text-gray-400 mt-2">Tap to confirm first ranking</p>
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={() => handleButtonClick(true)}
-              disabled={!!flash}
-              className="p-8 rounded-2xl shadow-sm border-2 text-center transition-all duration-300"
-              style={{
-                backgroundColor: flash === "current" ? "#dcfce7" : flash === "opponent" ? "#fee2e2" : "white",
-                borderColor: flash === "current" ? "#4ade80" : flash === "opponent" ? "#f87171" : "transparent",
-              }}
-            >
-              <span className="text-xl font-semibold text-gray-900">{current?.name}</span>
-            </button>
-            <button
-              onClick={() => handleButtonClick(false)}
-              disabled={!!flash}
-              className="p-8 rounded-2xl shadow-sm border-2 text-center transition-all duration-300"
-              style={{
-                backgroundColor: flash === "opponent" ? "#dcfce7" : flash === "current" ? "#fee2e2" : "white",
-                borderColor: flash === "opponent" ? "#4ade80" : flash === "current" ? "#f87171" : "transparent",
-              }}
-            >
-              <span className="text-xl font-semibold text-gray-900">{opponent.name}</span>
-            </button>
-          </div>
-        )}
+        <div
+          style={{
+            opacity: cardVisible ? 1 : 0,
+            transform: cardVisible ? "translateY(0px) scale(1)" : "translateY(10px) scale(0.97)",
+            transition: cardVisible
+              ? "opacity 0.35s ease-out, transform 0.35s ease-out"
+              : "opacity 0.25s ease-in, transform 0.25s ease-in",
+          }}
+        >
+          {ranked.length === 0 || !opponent ? (
+            <div className="flex justify-center">
+              <button
+                onClick={() => handleButtonClick(true)}
+                disabled={!!flash}
+                className="w-full max-w-sm p-8 bg-white rounded-2xl shadow-sm border-2 border-black text-center hover:bg-gray-50 transition-colors"
+              >
+                <span className="text-xl font-semibold text-gray-900">{current?.name}</span>
+                <p className="text-sm text-gray-400 mt-2">Tap to confirm first ranking</p>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => handleButtonClick(true)}
+                disabled={!!flash}
+                className="p-8 rounded-2xl shadow-sm border-2 text-center"
+                style={{
+                  backgroundColor: flash === "current" ? "#dcfce7" : flash === "opponent" ? "#fee2e2" : "white",
+                  borderColor: flash === "current" ? "#4ade80" : flash === "opponent" ? "#f87171" : "transparent",
+                  transition: "background-color 0.3s ease, border-color 0.3s ease",
+                }}
+              >
+                <span className="text-xl font-semibold text-gray-900">{current?.name}</span>
+              </button>
+              <button
+                onClick={() => handleButtonClick(false)}
+                disabled={!!flash}
+                className="p-8 rounded-2xl shadow-sm border-2 text-center"
+                style={{
+                  backgroundColor: flash === "opponent" ? "#dcfce7" : flash === "current" ? "#fee2e2" : "white",
+                  borderColor: flash === "opponent" ? "#4ade80" : flash === "current" ? "#f87171" : "transparent",
+                  transition: "background-color 0.3s ease, border-color 0.3s ease",
+                }}
+              >
+                <span className="text-xl font-semibold text-gray-900">{opponent.name}</span>
+              </button>
+            </div>
+          )}
+        </div>
 
         <p className="text-center text-sm text-gray-400 mt-6">
           {totalUnranked} experience{totalUnranked !== 1 ? "s" : ""} left to rank
