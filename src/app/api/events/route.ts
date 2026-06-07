@@ -9,12 +9,17 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const { name } = await req.json()
+  const { name, location, date, category } = await req.json()
   if (!name?.trim()) {
     return NextResponse.json({ error: "Name required" }, { status: 400 })
   }
   const event = await prisma.event.create({
-    data: { name: name.trim() },
+    data: {
+      name: name.trim(),
+      location: location?.trim() || null,
+      date: date ? new Date(date) : null,
+      category: category || null,
+    },
   })
   return NextResponse.json(event, { status: 201 })
 }

@@ -77,7 +77,7 @@ export default function ProfilePage() {
             <h1 className="text-2xl font-bold text-gray-900">{user.name}</h1>
             {rankCount && (
               <p className="text-sm text-gray-400 mt-0.5">
-                {rankCount.ranked} of {rankCount.total} events ranked
+                {rankCount.ranked} of {rankCount.total} experiences ranked
               </p>
             )}
           </div>
@@ -88,7 +88,7 @@ export default function ProfilePage() {
           <Row
             href="/rank"
             label="My Ranking"
-            description="View and continue ranking events"
+            description="View and continue ranking experiences"
           />
           <Row
             onClick={() => setShowPasswordChange((v) => !v)}
@@ -103,9 +103,14 @@ export default function ProfilePage() {
             </div>
           )}
           <Row
+            href="/rankings"
+            label="View Rankings"
+            description="Overall, personal, chronological, and by category"
+          />
+          <Row
             href="/home"
-            label="All Events"
-            description="Browse and add to the shared event list"
+            label="All Experiences"
+            description="Browse rankings and add to the shared experience list"
           />
         </div>
 

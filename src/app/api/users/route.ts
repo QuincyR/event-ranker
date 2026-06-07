@@ -1,6 +1,14 @@
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 
+export async function GET() {
+  const users = await prisma.user.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  })
+  return NextResponse.json(users)
+}
+
 export async function POST(req: Request) {
   const { name } = await req.json()
   if (!name?.trim()) {

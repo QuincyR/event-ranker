@@ -171,14 +171,14 @@ export default function RankPage() {
           <Link href="/home" className="text-sm text-gray-400 hover:text-gray-600 mb-8 inline-block">
             ← Back
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{user.name}&apos;s Rankings</h1>
-          <p className="text-gray-500 mb-8">All caught up!</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{user.name}&apos;s Experiences</h1>
+          <p className="text-gray-500 mb-8">All caught up! Head to rankings to see how you compare.</p>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             {state.ranked.length === 0 ? (
               <p className="text-gray-400 text-sm text-center py-6">
-                No events to rank yet.{" "}
-                <Link href="/home" className="underline">Add some!</Link>
+                No experiences to rank yet.{" "}
+                <Link href="/add" className="underline">Add some!</Link>
               </p>
             ) : (
               <ol className="space-y-3">
@@ -277,7 +277,7 @@ export default function RankPage() {
         )}
 
         <p className="text-center text-sm text-gray-400 mt-6">
-          {totalUnranked} event{totalUnranked !== 1 ? "s" : ""} left to rank
+          {totalUnranked} experience{totalUnranked !== 1 ? "s" : ""} left to rank
         </p>
       </div>
     </div>
