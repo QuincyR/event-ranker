@@ -66,11 +66,6 @@ export default function Home() {
     setPassword("")
   }
 
-  function handleSignOut() {
-    localStorage.removeItem("user")
-    setUser(null)
-  }
-
   async function handleAddEvent(e: React.FormEvent) {
     e.preventDefault()
     if (!newEvent.trim() || loading) return
@@ -88,32 +83,20 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-10">
-        <h1 className="text-3xl font-bold text-gray-900 mb-1">Events</h1>
-        <p className="text-gray-500 mb-8">Add events, then rank them head-to-head.</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Events</h1>
 
         {/* User section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+          <p className="text-gray-700 leading-relaxed mb-4">
+            Welcome to WhiffenBeli, the place to rank (and reminisce about) Whiffenpoof moments throughout the year. Rank moments, add any you think are missing, and compare your rankings with the other Whiffs!
+          </p>
           {user ? (
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Signed in as</p>
-                <p className="font-semibold text-gray-900">{user.name}</p>
-              </div>
-              <div className="flex gap-3">
-                <Link
-                  href="/rank"
-                  className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                >
-                  Rank Events →
-                </Link>
-                <button
-                  onClick={handleSignOut}
-                  className="px-4 py-2 text-gray-500 text-sm hover:text-gray-700"
-                >
-                  Sign out
-                </button>
-              </div>
-            </div>
+            <Link
+              href="/rank"
+              className="inline-block px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+            >
+              Rank Events →
+            </Link>
           ) : (
             <form onSubmit={handleJoin} className="flex flex-col gap-3">
               <div className="flex gap-3">
