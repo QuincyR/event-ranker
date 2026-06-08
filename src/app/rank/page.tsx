@@ -69,8 +69,10 @@ export default function RankPage() {
   const [streak, setStreak] = useState(0)
   const [showHotStreak, setShowHotStreak] = useState(false)
   const [streakBump, setStreakBump] = useState(false)
-  const [coinNotif, setCoinNotif] = useState<{ amount: number } | null>(null)
+  const [coinNotif, setCoinNotif] = useState<number | null>(null)
   const [coinNotifKey, setCoinNotifKey] = useState(0)
+  const [streakNotif, setStreakNotif] = useState<number | null>(null)
+  const [streakNotifKey, setStreakNotifKey] = useState(0)
   const streakRef = useRef(0)
   const timerStartRef = useRef(Date.now())
   const timerRafRef = useRef<number | null>(null)
@@ -234,9 +236,9 @@ export default function RankPage() {
       // Bonus coins: picks after streak 5
       if (newStreak > 5 && user) {
         const bonus = Math.floor(newStreak / 5)
-        setCoinNotifKey((k) => k + 1)
-        setCoinNotif({ amount: bonus })
-        setTimeout(() => setCoinNotif(null), 1200)
+        setStreakNotifKey((k) => k + 1)
+        setStreakNotif(bonus)
+        setTimeout(() => setStreakNotif(null), 1200)
         grantStreakCoins(bonus, user.id)
       }
     } else {
@@ -272,7 +274,7 @@ export default function RankPage() {
 
       if (!state.isRerank) {
         setCoinNotifKey((k) => k + 1)
-        setCoinNotif({ amount: 5 })
+        setCoinNotif(5)
         setTimeout(() => setCoinNotif(null), 1800)
       }
 
@@ -539,6 +541,15 @@ export default function RankPage() {
 
         {/* Streak counter */}
         <div className="relative flex items-center justify-center gap-1.5 mb-4 h-8">
+          {streakNotif !== null && (
+            <span
+              key={streakNotifKey}
+              className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-0.5 text-sm font-bold text-yellow-500 pointer-events-none"
+              style={{ animation: "floatUp 1.2s ease-out forwards" }}
+            >
+              +{streakNotif} <CoinIcon size={14} />
+            </span>
+          )}
           {streak > 0 && (
             <>
               <span
@@ -654,13 +665,13 @@ export default function RankPage() {
         </div>
 
         <div className="relative h-8 mt-4 flex items-center justify-center">
-          {coinNotif && (
+          {coinNotif !== null && (
             <span
               key={coinNotifKey}
               className="absolute flex items-center gap-1.5 text-sm font-semibold text-yellow-600 pointer-events-none whitespace-nowrap"
-              style={{ animation: `floatUp ${coinNotif.amount === 5 ? "1.8s" : "1.2s"} ease-out forwards` }}
+              style={{ animation: "floatUp 1.8s ease-out forwards" }}
             >
-              {coinNotif.amount === 5 ? "Experience ranked!" : "Streak bonus!"} +{coinNotif.amount} <CoinIcon size={15} />
+              Experience ranked! +{coinNotif} <CoinIcon size={15} />
             </span>
           )}
         </div>
