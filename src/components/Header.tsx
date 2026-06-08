@@ -7,6 +7,7 @@ import Image from "next/image"
 import { CoinAnimation, COIN_ANIM_DURATION_MS } from "./CoinAnimation"
 import { CoinIcon } from "./CoinIcon"
 import { TierBadge } from "./TierBadge"
+import { TierModal } from "./TierModal"
 
 type User = { id: string; name: string; coins?: number }
 
@@ -16,6 +17,7 @@ export function Header() {
   const [displayedCoins, setDisplayedCoins] = useState(0)
   const [coinGain, setCoinGain] = useState<{ amount: number } | null>(null)
   const [bump, setBump] = useState(false)
+  const [showTierModal, setShowTierModal] = useState(false)
   const countIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const displayedRef = useRef(0)   // mirrors displayedCoins for use inside event closures
   const targetRef = useRef(0)       // current count-up target; mini events extend it
@@ -101,8 +103,10 @@ export function Header() {
 
           {user && (
             <div className="flex items-center gap-3">
-              {/* Tier badge */}
-              <TierBadge coins={displayedCoins} />
+              {/* Tier badge — click to see tier requirements */}
+              <button onClick={() => setShowTierModal(true)} className="cursor-pointer">
+                <TierBadge coins={displayedCoins} />
+              </button>
 
               {/* Coin counter */}
               <div
@@ -134,6 +138,10 @@ export function Header() {
           amount={coinGain.amount}
           onComplete={() => setCoinGain(null)}
         />
+      )}
+
+      {showTierModal && (
+        <TierModal coins={displayedCoins} onClose={() => setShowTierModal(false)} />
       )}
     </>
   )

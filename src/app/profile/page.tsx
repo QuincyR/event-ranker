@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { TierBadge } from "@/components/TierBadge"
+import { TierModal } from "@/components/TierModal"
 
-type User = { id: string; name: string }
+type User = { id: string; name: string; coins?: number }
 
 function Row({
   href,
@@ -41,6 +43,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null)
   const [rankCount, setRankCount] = useState<{ ranked: number; total: number } | null>(null)
   const [showPasswordChange, setShowPasswordChange] = useState(false)
+  const [showTierModal, setShowTierModal] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -70,18 +73,31 @@ export default function ProfilePage() {
 
         {/* Avatar + name */}
         <div className="flex items-center gap-5 mb-10">
-          <div className="w-16 h-16 rounded-full bg-black text-white flex items-center justify-center text-2xl font-bold">
+          <div className="w-16 h-16 rounded-full bg-black text-white flex items-center justify-center text-2xl font-bold shrink-0">
             {user.name[0].toUpperCase()}
           </div>
-          <div>
+          <div className="min-w-0">
             <h1 className="text-2xl font-bold text-gray-900">{user.name}</h1>
             {rankCount && (
               <p className="text-sm text-gray-400 mt-0.5">
                 {rankCount.ranked} of {rankCount.total} experiences ranked
               </p>
             )}
+            {user.coins !== undefined && (
+              <button
+                onClick={() => setShowTierModal(true)}
+                className="mt-2 inline-block cursor-pointer"
+                title="Click to see tier requirements"
+              >
+                <TierBadge coins={user.coins} />
+              </button>
+            )}
           </div>
         </div>
+
+        {showTierModal && user.coins !== undefined && (
+          <TierModal coins={user.coins} onClose={() => setShowTierModal(false)} />
+        )}
 
         {/* Menu */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-4">
