@@ -183,7 +183,7 @@ export default function RankPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600 mb-4">You need to join first.</p>
-          <Link href="/" className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium">
+          <Link href="/" className="px-4 py-2 bg-[#00356B] text-white rounded-lg text-sm font-medium hover:bg-[#002654] transition-colors">
             Sign in
           </Link>
         </div>
@@ -270,7 +270,7 @@ export default function RankPage() {
           </p>
           <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-black rounded-full transition-all"
+              className="h-full bg-[#00356B] rounded-full transition-all"
               style={{ width: `${(progress / totalEvents) * 100}%` }}
             />
           </div>
@@ -303,7 +303,7 @@ export default function RankPage() {
               <button
                 onClick={() => handleButtonClick(true)}
                 disabled={!!flash}
-                className="w-full max-w-sm p-8 bg-white rounded-2xl shadow-sm border-2 border-black text-center hover:bg-gray-50 transition-colors"
+                className="w-full max-w-sm p-8 bg-white rounded-2xl shadow-sm border-2 border-[#00356B] text-center hover:bg-gray-50 transition-colors"
               >
                 <span className="text-xl font-semibold text-gray-900">{current?.name}</span>
                 {[current?.category, current?.location].filter(Boolean).length > 0 && (
