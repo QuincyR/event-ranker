@@ -69,9 +69,8 @@ export default function RankPage() {
   const [streak, setStreak] = useState(0)
   const [showHotStreak, setShowHotStreak] = useState(false)
   const [streakBump, setStreakBump] = useState(false)
-  const [streakDelta, setStreakDelta] = useState(false)
-  const [rankReward, setRankReward] = useState(false)
-  const [rankRewardKey, setRankRewardKey] = useState(0)
+  const [coinNotif, setCoinNotif] = useState<{ amount: number } | null>(null)
+  const [coinNotifKey, setCoinNotifKey] = useState(0)
   const streakRef = useRef(0)
   const timerStartRef = useRef(Date.now())
   const timerRafRef = useRef<number | null>(null)
@@ -119,7 +118,7 @@ export default function RankPage() {
         localStorage.setItem("user", JSON.stringify({ ...u, coins: data.newCoins }))
       }
       window.dispatchEvent(new CustomEvent("coinGain", {
-        detail: { from: data.newCoins - bonus, amount: bonus },
+        detail: { from: data.newCoins - bonus, amount: bonus, mini: true },
       }))
     } catch {
       // non-critical
@@ -235,8 +234,9 @@ export default function RankPage() {
       // Bonus coins: picks after streak 5
       if (newStreak > 5 && user) {
         const bonus = Math.floor(newStreak / 5)
-        setStreakDelta(true)
-        setTimeout(() => setStreakDelta(false), 700)
+        setCoinNotifKey((k) => k + 1)
+        setCoinNotif({ amount: bonus })
+        setTimeout(() => setCoinNotif(null), 1200)
         grantStreakCoins(bonus, user.id)
       }
     } else {
@@ -271,9 +271,9 @@ export default function RankPage() {
       saveProgress(user.id, newRanked, skipped, state.isRerank ? 0 : 5)
 
       if (!state.isRerank) {
-        setRankRewardKey((k) => k + 1)
-        setRankReward(true)
-        setTimeout(() => setRankReward(false), 1800)
+        setCoinNotifKey((k) => k + 1)
+        setCoinNotif({ amount: 5 })
+        setTimeout(() => setCoinNotif(null), 1800)
       }
 
       if (toRank.length === 0) {
@@ -564,15 +564,6 @@ export default function RankPage() {
             </>
           )}
 
-          {/* Floating "+N [coin]" delta when streak coins are earned */}
-          {streakDelta && streak > 5 && (
-            <span
-              className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-0.5 text-sm font-bold text-yellow-500 pointer-events-none"
-              style={{ animation: "floatUp 0.7s ease-out forwards" }}
-            >
-              +{Math.floor(streak / 5)} <CoinIcon size={14} />
-            </span>
-          )}
         </div>
 
         <h2 className="text-xl font-semibold text-gray-700 text-center mb-8">
@@ -663,13 +654,13 @@ export default function RankPage() {
         </div>
 
         <div className="relative h-8 mt-4 flex items-center justify-center">
-          {rankReward && (
+          {coinNotif && (
             <span
-              key={rankRewardKey}
+              key={coinNotifKey}
               className="absolute flex items-center gap-1.5 text-sm font-semibold text-yellow-600 pointer-events-none whitespace-nowrap"
-              style={{ animation: "floatUp 1.8s ease-out forwards" }}
+              style={{ animation: `floatUp ${coinNotif.amount === 5 ? "1.8s" : "1.2s"} ease-out forwards` }}
             >
-              Experience ranked! +5 <CoinIcon size={15} />
+              {coinNotif.amount === 5 ? "Experience ranked!" : "Streak bonus!"} +{coinNotif.amount} <CoinIcon size={15} />
             </span>
           )}
         </div>
