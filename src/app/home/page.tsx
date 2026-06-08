@@ -31,6 +31,14 @@ export default function HomePage() {
     if (!stored) { router.replace("/"); return }
     setUser(JSON.parse(stored))
 
+    const pending = localStorage.getItem("pendingCoinGain")
+    if (pending) {
+      localStorage.removeItem("pendingCoinGain")
+      const gain = JSON.parse(pending) as { from: number; amount: number }
+      // Delay so Header has time to mount and attach its listener
+      setTimeout(() => window.dispatchEvent(new CustomEvent("coinGain", { detail: gain })), 600)
+    }
+
     fetch("/api/rankings/overall")
       .then((r) => r.json())
       .then((data: RankedItem[]) => {

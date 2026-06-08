@@ -47,7 +47,10 @@ export default function SignInPage() {
       body: JSON.stringify({ name: selectedName }),
     })
     const u = await res.json()
-    localStorage.setItem("user", JSON.stringify(u))
+    localStorage.setItem("user", JSON.stringify({ id: u.id, name: u.name, coins: u.coins }))
+    if (u.isNew) {
+      localStorage.setItem("pendingCoinGain", JSON.stringify({ from: 0, amount: u.coins }))
+    }
     router.push("/home")
   }
 

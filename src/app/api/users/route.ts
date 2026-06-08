@@ -14,10 +14,12 @@ export async function POST(req: Request) {
   if (!name?.trim()) {
     return NextResponse.json({ error: "Name required" }, { status: 400 })
   }
-  const user = await prisma.user.upsert({
-    where: { name: name.trim() },
-    update: {},
-    create: { name: name.trim() },
-  })
-  return NextResponse.json(user)
+
+  const existing = await prisma.user.findUnique({ where: { name: name.trim() } })
+  if (existing) {
+    return NextResponse.json({ id: existing.id, name: existing.name, coins: existing.coins, isNew: false })
+  }
+
+  const user = await prisma.user.create({ data: { name: name.trim(), coins: 20 } })
+  return NextResponse.json({ id: user.id, name: user.name, coins: user.coins, isNew: true })
 }

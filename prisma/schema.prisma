@@ -12,6 +12,7 @@ model User {
   name          String @unique
   rankedEvents  String @default("[]")
   skippedEvents String @default("[]")
+  coins         Int    @default(0)
 }
 
 model Event {
