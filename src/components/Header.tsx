@@ -17,13 +17,19 @@ export function Header() {
   const [coinGain, setCoinGain] = useState<{ amount: number } | null>(null)
   const [bump, setBump] = useState(false)
   const countIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const displayedRef = useRef(0)   // mirrors displayedCoins for use inside event closures
+  const targetRef = useRef(0)       // current count-up target; mini events extend it
 
   // Keep user + coins in sync with localStorage on every navigation
   useEffect(() => {
     const stored = localStorage.getItem("user")
     const u: User | null = stored ? JSON.parse(stored) : null
     setUser(u)
-    if (u) setDisplayedCoins(u.coins ?? 0)
+    if (u) {
+      const coins = u.coins ?? 0
+      displayedRef.current = coins
+      setDisplayedCoins(coins)
+    }
   }, [pathname])
 
   // Listen for coinGain events dispatched by any page
@@ -32,25 +38,37 @@ export function Header() {
       const { from, amount, mini } = (e as CustomEvent<{ from: number; amount: number; mini?: boolean }>).detail
 
       if (mini) {
-        setDisplayedCoins(from + amount)
-        setBump(true)
-        setTimeout(() => setBump(false), 400)
+        if (countIntervalRef.current) {
+          // A full animation is already counting up — just extend its target
+          targetRef.current += amount
+        } else {
+          const newVal = from + amount
+          displayedRef.current = newVal
+          setDisplayedCoins(newVal)
+          setBump(true)
+          setTimeout(() => setBump(false), 400)
+        }
         return
       }
 
-      // Reset counter to pre-gain value, then count up with flying animation
-      setDisplayedCoins(from)
+      // Full flying-coin animation.
+      // Start from the higher of `from` and the current displayed value so the
+      // counter never ticks backward if a mini bump already moved it forward.
+      const safeStart = Math.max(from, displayedRef.current)
+      displayedRef.current = safeStart
+      setDisplayedCoins(safeStart)
       setCoinGain({ amount })
 
       if (countIntervalRef.current) clearInterval(countIntervalRef.current)
 
-      const target = from + amount
-      let current = from
+      targetRef.current = safeStart + amount
+      let current = safeStart
       const tick = Math.max(50, COIN_ANIM_DURATION_MS / amount)
       countIntervalRef.current = setInterval(() => {
         current += 1
+        displayedRef.current = current
         setDisplayedCoins(current)
-        if (current >= target) {
+        if (current >= targetRef.current) {
           clearInterval(countIntervalRef.current!)
           countIntervalRef.current = null
           setBump(true)
