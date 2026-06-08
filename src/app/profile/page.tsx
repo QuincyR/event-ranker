@@ -70,7 +70,7 @@ export default function ProfilePage() {
 
         {/* Avatar + name */}
         <div className="flex items-center gap-5 mb-10">
-          <div className="w-16 h-16 rounded-full bg-[#00356B] text-white flex items-center justify-center text-2xl font-bold">
+          <div className="w-16 h-16 rounded-full bg-black text-white flex items-center justify-center text-2xl font-bold">
             {user.name[0].toUpperCase()}
           </div>
           <div>

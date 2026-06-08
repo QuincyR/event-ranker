@@ -175,7 +175,7 @@ export default function ComparePage() {
             <p className="text-gray-400 text-sm">
               Rank at least 2 experiences, and make sure others have too.
             </p>
-            <Link href="/rank" className="inline-block mt-4 px-4 py-2 bg-[#00356B] text-white rounded-lg text-sm font-medium hover:bg-[#002654] transition-colors">
+            <Link href="/rank" className="inline-block mt-4 px-4 py-2 bg-[#C8102E] text-white rounded-lg text-sm font-medium hover:bg-[#a50d26] transition-colors">
               Start Ranking →
             </Link>
           </div>
@@ -231,7 +231,7 @@ export default function ComparePage() {
                               onClick={() => setDetailMode("close")}
                               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                                 detailMode === "close"
-                                  ? "bg-[#00356B] text-white"
+                                  ? "bg-[#C8102E] text-white"
                                   : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                               }`}
                             >
@@ -241,7 +241,7 @@ export default function ComparePage() {
                               onClick={() => setDetailMode("far")}
                               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                                 detailMode === "far"
-                                  ? "bg-[#00356B] text-white"
+                                  ? "bg-[#C8102E] text-white"
                                   : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                               }`}
                             >

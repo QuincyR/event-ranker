@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { WhiffenpoofsLogo } from "@/components/WhiffenpoofsLogo"
 
 const NAMES = [
   "Emily", "Eunice", "Peighton", "Yixiao", "Tabatha",
@@ -53,6 +54,7 @@ export default function SignInPage() {
   return (
     <div className="min-h-screen bg-[#00356B] flex flex-col items-center justify-center px-4">
       <div className="text-center mb-8">
+        <WhiffenpoofsLogo className="h-16 w-auto text-[#C8102E] mx-auto mb-4" />
         <h1 className="text-4xl font-bold text-white tracking-tight mb-2">WhiffenBeli</h1>
         <p className="text-blue-200 text-sm">Rank the year&apos;s Whiffenpoof memories</p>
       </div>
@@ -62,7 +64,7 @@ export default function SignInPage() {
           <select
             value={selectedName}
             onChange={(e) => { setSelectedName(e.target.value); setError("") }}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00356B] bg-white text-gray-700"
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C8102E] bg-white text-gray-700"
           >
             <option value="">Select your name...</option>
             {NAMES.map((name) => (
@@ -76,7 +78,7 @@ export default function SignInPage() {
               value={password}
               onChange={(e) => { setPassword(e.target.value); setError("") }}
               placeholder="Password"
-              className="w-full pl-4 pr-10 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00356B]"
+              className="w-full pl-4 pr-10 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
             />
             <button
               type="button"
@@ -91,7 +93,7 @@ export default function SignInPage() {
 
           <button
             type="submit"
-            className="w-full py-2.5 bg-[#00356B] text-white rounded-lg text-sm font-medium hover:bg-[#002654] transition-colors"
+            className="w-full py-2.5 bg-[#C8102E] text-white rounded-lg text-sm font-medium hover:bg-[#a50d26] transition-colors"
           >
             Sign in
           </button>

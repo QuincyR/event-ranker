@@ -68,7 +68,7 @@ export default function AddExperiencePage() {
                 value={name}
                 onChange={(e) => { setName(e.target.value); setError("") }}
                 placeholder="e.g. Space Needle"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00356B]"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
               />
             </div>
 
@@ -81,7 +81,7 @@ export default function AddExperiencePage() {
                 value={location}
                 onChange={(e) => { setLocation(e.target.value); setError("") }}
                 placeholder="e.g. Seattle, WA or Lima, Peru"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00356B]"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
               />
             </div>
 
@@ -94,7 +94,7 @@ export default function AddExperiencePage() {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Any extra context or memories..."
                 rows={2}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00356B] resize-none"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C8102E] resize-none"
               />
             </div>
 
@@ -106,7 +106,7 @@ export default function AddExperiencePage() {
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00356B] bg-white"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C8102E] bg-white"
               />
             </div>
 
@@ -117,7 +117,7 @@ export default function AddExperiencePage() {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00356B] bg-white text-gray-700"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C8102E] bg-white text-gray-700"
               >
                 <option value="">Select a category...</option>
                 {CATEGORIES.map((cat) => (
@@ -131,7 +131,7 @@ export default function AddExperiencePage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-2.5 bg-[#00356B] text-white rounded-lg text-sm font-medium hover:bg-[#002654] disabled:opacity-50 transition-colors"
+              className="w-full py-2.5 bg-[#C8102E] text-white rounded-lg text-sm font-medium hover:bg-[#a50d26] disabled:opacity-50 transition-colors"
             >
               {submitting ? "Adding..." : "Add Experience"}
             </button>

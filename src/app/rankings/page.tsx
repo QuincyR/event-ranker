@@ -162,7 +162,7 @@ export default function RankingsPage() {
               onClick={() => setTab(t.key)}
               className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
                 tab === t.key
-                  ? "bg-white shadow-sm text-[#00356B] font-semibold"
+                  ? "bg-white shadow-sm text-[#C8102E] font-semibold"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -220,7 +220,7 @@ export default function RankingsPage() {
                 setSelectedPerson(e.target.value)
                 loadPersonRanking(e.target.value)
               }}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00356B] bg-white mb-4"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C8102E] bg-white mb-4"
             >
               <option value="">Select a Whiff...</option>
               {NAMES.map((name) => (
@@ -298,7 +298,7 @@ export default function RankingsPage() {
                               type="date"
                               value={item.event.date ? item.event.date.substring(0, 10) : ""}
                               onChange={(e) => handleSetDate(item.event.id, e.target.value)}
-                              className="text-xs border border-gray-200 rounded px-1.5 py-1 text-gray-500 focus:outline-none focus:ring-1 focus:ring-[#00356B] bg-white"
+                              className="text-xs border border-gray-200 rounded px-1.5 py-1 text-gray-500 focus:outline-none focus:ring-1 focus:ring-[#C8102E] bg-white"
                             />
                           </div>
                         </li>
@@ -348,7 +348,7 @@ export default function RankingsPage() {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00356B] bg-white mb-4"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C8102E] bg-white mb-4"
             >
               <option value="">Select a category...</option>
               {CATEGORIES.map((cat) => (

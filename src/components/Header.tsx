@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
+import { WhiffenpoofsLogo } from "./WhiffenpoofsLogo"
 
 type User = { id: string; name: string }
 
@@ -16,18 +17,19 @@ export function Header() {
   }, [pathname])
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-10 bg-[#00356B] border-b border-[#002654]">
+    <header className="fixed top-0 left-0 right-0 z-10 bg-black border-b border-neutral-800">
       <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-        <Link href={user ? "/home" : "/"} className="font-bold text-white text-lg tracking-tight">
-          WhiffenBeli
+        <Link href={user ? "/home" : "/"} className="flex items-center gap-2.5">
+          <WhiffenpoofsLogo className="h-7 w-auto text-[#C8102E]" />
+          <span className="font-bold text-white text-lg tracking-tight">WhiffenBeli</span>
         </Link>
         {user && (
           <Link
             href="/profile"
-            className="flex items-center gap-2 text-sm text-blue-200 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors"
           >
             <span className="hidden sm:block">{user.name}</span>
-            <div className="w-8 h-8 rounded-full bg-white text-[#00356B] flex items-center justify-center text-sm font-bold">
+            <div className="w-8 h-8 rounded-full bg-[#C8102E] text-white flex items-center justify-center text-sm font-bold">
               {user.name[0].toUpperCase()}
             </div>
           </Link>

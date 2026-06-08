@@ -183,7 +183,7 @@ export default function RankPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600 mb-4">You need to join first.</p>
-          <Link href="/" className="px-4 py-2 bg-[#00356B] text-white rounded-lg text-sm font-medium hover:bg-[#002654] transition-colors">
+          <Link href="/" className="px-4 py-2 bg-[#C8102E] text-white rounded-lg text-sm font-medium hover:bg-[#a50d26] transition-colors">
             Sign in
           </Link>
         </div>
@@ -270,7 +270,7 @@ export default function RankPage() {
           </p>
           <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#00356B] rounded-full transition-all"
+              className="h-full bg-[#C8102E] rounded-full transition-all"
               style={{ width: `${(progress / totalEvents) * 100}%` }}
             />
           </div>

@@ -54,7 +54,7 @@ export default function HomePage() {
           <div className="flex flex-wrap gap-2">
             <Link
               href="/rank"
-              className="px-3 py-2 bg-[#00356B] text-white rounded-lg text-sm font-medium hover:bg-[#002654] transition-colors whitespace-nowrap"
+              className="px-3 py-2 bg-[#C8102E] text-white rounded-lg text-sm font-medium hover:bg-[#a50d26] transition-colors whitespace-nowrap"
             >
               Rank Experiences
             </Link>
