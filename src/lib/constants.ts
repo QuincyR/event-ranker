@@ -1,16 +1,20 @@
 export const CATEGORIES = [
-  "Retreat",
-  "Boston Mini-Tour",
-  "Fall Semester",
+  "On Campus",
   "Fall Tour",
-  "New Jersey Mini-Tour",
+  "Mini Tours",
   "Winter Tour",
-  "Spring Semester",
   "Spring Tour",
   "World Tour",
-  "On Campus",
-  "Other",
 ] as const
+
+export const CATEGORY_SEASON_ORDER: Record<string, number> = {
+  "On Campus": 0,
+  "Fall Tour": 1,
+  "Mini Tours": 2,
+  "Winter Tour": 3,
+  "Spring Tour": 4,
+  "World Tour": 5,
+}
 
 export const NAMES = [
   "Emily", "Eunice", "Peighton", "Yixiao", "Tabatha",

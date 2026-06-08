@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { CATEGORIES, NAMES } from "@/lib/constants"
+import { CATEGORIES, NAMES, CATEGORY_SEASON_ORDER } from "@/lib/constants"
 
 type EventData = {
   id: string
@@ -83,6 +83,22 @@ export default function RankingsPage() {
       .catch(() => setLoading(false))
   }, [router])
 
+  async function handleSetDate(eventId: string, dateStr: string) {
+    const date = dateStr || null
+    setAllRankings((prev) =>
+      prev.map((item) =>
+        item.event.id === eventId
+          ? { ...item, event: { ...item.event, date: date ? new Date(date + "T12:00:00Z").toISOString() : null } }
+          : item
+      )
+    )
+    await fetch(`/api/events/${eventId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date }),
+    })
+  }
+
   async function loadPersonRanking(personName: string) {
     setPersonRanking(null)
     if (!personName) return
@@ -104,10 +120,16 @@ export default function RankingsPage() {
 
   const rankedOverall = allRankings.filter((x) => x.rankedByCount > 0)
 
-  const chronoWithDate = allRankings
+  const chronoWithDate = [...allRankings]
     .filter((x) => x.event.date)
     .sort((a, b) => new Date(a.event.date!).getTime() - new Date(b.event.date!).getTime())
-  const chronoNoDate = allRankings.filter((x) => !x.event.date)
+  const chronoNoDate = [...allRankings]
+    .filter((x) => !x.event.date)
+    .sort((a, b) => {
+      const aOrder = CATEGORY_SEASON_ORDER[a.event.category ?? ""] ?? 99
+      const bOrder = CATEGORY_SEASON_ORDER[b.event.category ?? ""] ?? 99
+      return aOrder !== bOrder ? aOrder - bOrder : a.event.name.localeCompare(b.event.name)
+    })
 
   const categoryFiltered = selectedCategory
     ? (() => {
@@ -243,33 +265,33 @@ export default function RankingsPage() {
         {/* Chronological */}
         {tab === "chronological" && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h2 className="font-semibold text-gray-900 mb-5">Year in Review</h2>
-            {chronoWithDate.length === 0 && chronoNoDate.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center py-6">
-                No experiences added yet.
-              </p>
+            <h2 className="font-semibold text-gray-900 mb-1">Year in Review</h2>
+            <p className="text-xs text-gray-400 mb-5">Tap a date field to pin an experience to the timeline.</p>
+            {allRankings.length === 0 ? (
+              <p className="text-gray-400 text-sm text-center py-6">No experiences added yet.</p>
             ) : (
               <>
                 {chronoWithDate.length > 0 && (
-                  <ul className="space-y-4 mb-6">
+                  <ul className="divide-y divide-gray-50">
                     {chronoWithDate.map((item) => {
-                      const d = new Date(item.event.date!)
-                      const dateStr = d.toLocaleDateString("en-US", { month: "long", year: "numeric" })
+                      const dateStr = new Date(item.event.date!).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+                      const meta = [dateStr, item.event.category, item.event.location].filter(Boolean).join(" · ")
                       return (
-                        <li key={item.event.id} className="flex items-start gap-4">
+                        <li key={item.event.id} className="flex items-start gap-3 py-3">
                           <div className="min-w-0 flex-1">
                             <p className="text-gray-800 font-medium leading-snug">{item.event.name}</p>
-                            <p className="text-xs text-gray-400 mt-0.5">
-                              {[dateStr, item.event.category, item.event.location]
-                                .filter(Boolean)
-                                .join(" · ")}
-                            </p>
+                            {meta && <p className="text-xs text-gray-400 mt-0.5">{meta}</p>}
+                            {item.event.description && <p className="text-xs text-gray-400 mt-0.5 italic">{item.event.description}</p>}
                           </div>
-                          {item.rank != null && (
-                            <span className="text-xs text-gray-400 whitespace-nowrap shrink-0 pt-1">
-                              #{item.rank} overall
-                            </span>
-                          )}
+                          <div className="flex flex-col items-end gap-1.5 shrink-0 pt-0.5">
+                            {item.rank != null && <span className="text-xs text-gray-400">#{item.rank} overall</span>}
+                            <input
+                              type="date"
+                              value={item.event.date ? item.event.date.substring(0, 10) : ""}
+                              onChange={(e) => handleSetDate(item.event.id, e.target.value)}
+                              className="text-xs border border-gray-200 rounded px-1.5 py-1 text-gray-500 focus:outline-none focus:ring-1 focus:ring-black bg-white"
+                            />
+                          </div>
                         </li>
                       )
                     })}
@@ -279,26 +301,30 @@ export default function RankingsPage() {
                 {chronoNoDate.length > 0 && (
                   <>
                     {chronoWithDate.length > 0 && (
-                      <p className="text-xs font-medium text-gray-400 mb-3">Date unknown</p>
+                      <p className="text-xs font-medium text-gray-400 mt-6 mb-2">No date — ordered by season</p>
                     )}
-                    <ul className="space-y-4">
-                      {chronoNoDate.map((item) => (
-                        <li key={item.event.id} className="flex items-start gap-4">
-                          <div className="min-w-0 flex-1">
-                            <p className="text-gray-800 font-medium leading-snug">{item.event.name}</p>
-                            {(item.event.category || item.event.location) && (
-                              <p className="text-xs text-gray-400 mt-0.5">
-                                {[item.event.category, item.event.location].filter(Boolean).join(" · ")}
-                              </p>
-                            )}
-                          </div>
-                          {item.rank != null && (
-                            <span className="text-xs text-gray-400 whitespace-nowrap shrink-0 pt-1">
-                              #{item.rank} overall
-                            </span>
-                          )}
-                        </li>
-                      ))}
+                    <ul className="divide-y divide-gray-50">
+                      {chronoNoDate.map((item) => {
+                        const meta = [item.event.category, item.event.location].filter(Boolean).join(" · ")
+                        return (
+                          <li key={item.event.id} className="flex items-start gap-3 py-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-gray-800 font-medium leading-snug">{item.event.name}</p>
+                              {meta && <p className="text-xs text-gray-400 mt-0.5">{meta}</p>}
+                              {item.event.description && <p className="text-xs text-gray-400 mt-0.5 italic">{item.event.description}</p>}
+                            </div>
+                            <div className="flex flex-col items-end gap-1.5 shrink-0 pt-0.5">
+                              {item.rank != null && <span className="text-xs text-gray-400">#{item.rank} overall</span>}
+                              <input
+                                type="date"
+                                value={item.event.date ? item.event.date.substring(0, 10) : ""}
+                                onChange={(e) => handleSetDate(item.event.id, e.target.value)}
+                                className="text-xs border border-gray-200 rounded px-1.5 py-1 text-gray-500 focus:outline-none focus:ring-1 focus:ring-black bg-white"
+                              />
+                            </div>
+                          </li>
+                        )
+                      })}
                     </ul>
                   </>
                 )}
