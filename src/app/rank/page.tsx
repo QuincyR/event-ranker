@@ -131,7 +131,7 @@ export default function RankPage() {
     setState({ ...state, lo: newLo, hi: newHi })
   }
 
-  function handleSkip() {
+  function handleSkipCurrent() {
     if (state.phase !== "ranking" || !state.current || !user || flash) return
 
     setHistory((h) => [...h, state])
@@ -146,6 +146,22 @@ export default function RankPage() {
 
     const [next, ...remaining] = state.toRank
     setState({ ...state, toRank: remaining, current: next, lo: 0, hi: state.ranked.length, skipped: newSkipped })
+  }
+
+  function handleSkipOpponent() {
+    if (state.phase !== "ranking" || !state.current || !user || flash) return
+    const { ranked, skipped } = state
+    const mid = Math.floor((state.lo + state.hi) / 2)
+    const opponent = ranked[mid]
+    if (!opponent) return
+
+    setHistory((h) => [...h, state])
+
+    const newRanked = ranked.filter((e) => e.id !== opponent.id)
+    const newSkipped = [...skipped, opponent]
+    saveProgress(user.id, newRanked, newSkipped)
+
+    setState({ ...state, ranked: newRanked, lo: 0, hi: newRanked.length, skipped: newSkipped })
   }
 
   function handleUndo() {
@@ -283,7 +299,7 @@ export default function RankPage() {
           }}
         >
           {ranked.length === 0 || !opponent ? (
-            <div className="flex justify-center">
+            <div className="flex flex-col items-center gap-3">
               <button
                 onClick={() => handleButtonClick(true)}
                 disabled={!!flash}
@@ -300,66 +316,81 @@ export default function RankPage() {
                 )}
                 <p className="text-sm text-gray-400 mt-2">Tap to confirm first ranking</p>
               </button>
+              <button
+                onClick={handleSkipCurrent}
+                disabled={!!flash}
+                className="text-xs text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors underline underline-offset-2"
+              >
+                Not my experience
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => handleButtonClick(true)}
-                disabled={!!flash}
-                className="p-8 rounded-2xl shadow-sm border-2 text-center"
-                style={{
-                  backgroundColor: flash === "current" ? "#dcfce7" : flash === "opponent" ? "#fee2e2" : "white",
-                  borderColor: flash === "current" ? "#4ade80" : flash === "opponent" ? "#f87171" : "transparent",
-                  transition: "background-color 0.3s ease, border-color 0.3s ease",
-                }}
-              >
-                <span className="text-xl font-semibold text-gray-900">{current?.name}</span>
-                {[current?.category, current?.location].filter(Boolean).length > 0 && (
-                  <p className="text-xs text-gray-400 mt-1.5">
-                    {[current?.category, current?.location].filter(Boolean).join(" · ")}
-                  </p>
-                )}
-                {current?.description && (
-                  <p className="text-xs text-gray-400 mt-1 italic">{current.description}</p>
-                )}
-              </button>
-              <button
-                onClick={() => handleButtonClick(false)}
-                disabled={!!flash}
-                className="p-8 rounded-2xl shadow-sm border-2 text-center"
-                style={{
-                  backgroundColor: flash === "opponent" ? "#dcfce7" : flash === "current" ? "#fee2e2" : "white",
-                  borderColor: flash === "opponent" ? "#4ade80" : flash === "current" ? "#f87171" : "transparent",
-                  transition: "background-color 0.3s ease, border-color 0.3s ease",
-                }}
-              >
-                <span className="text-xl font-semibold text-gray-900">{opponent.name}</span>
-                {[opponent.category, opponent.location].filter(Boolean).length > 0 && (
-                  <p className="text-xs text-gray-400 mt-1.5">
-                    {[opponent.category, opponent.location].filter(Boolean).join(" · ")}
-                  </p>
-                )}
-                {opponent.description && (
-                  <p className="text-xs text-gray-400 mt-1 italic">{opponent.description}</p>
-                )}
-              </button>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => handleButtonClick(true)}
+                  disabled={!!flash}
+                  className="p-8 rounded-2xl shadow-sm border-2 text-center"
+                  style={{
+                    backgroundColor: flash === "current" ? "#dcfce7" : flash === "opponent" ? "#fee2e2" : "white",
+                    borderColor: flash === "current" ? "#4ade80" : flash === "opponent" ? "#f87171" : "transparent",
+                    transition: "background-color 0.3s ease, border-color 0.3s ease",
+                  }}
+                >
+                  <span className="text-xl font-semibold text-gray-900">{current?.name}</span>
+                  {[current?.category, current?.location].filter(Boolean).length > 0 && (
+                    <p className="text-xs text-gray-400 mt-1.5">
+                      {[current?.category, current?.location].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
+                  {current?.description && (
+                    <p className="text-xs text-gray-400 mt-1 italic">{current.description}</p>
+                  )}
+                </button>
+                <button
+                  onClick={handleSkipCurrent}
+                  disabled={!!flash}
+                  className="text-xs text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors underline underline-offset-2 text-center"
+                >
+                  Not my experience
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => handleButtonClick(false)}
+                  disabled={!!flash}
+                  className="p-8 rounded-2xl shadow-sm border-2 text-center"
+                  style={{
+                    backgroundColor: flash === "opponent" ? "#dcfce7" : flash === "current" ? "#fee2e2" : "white",
+                    borderColor: flash === "opponent" ? "#4ade80" : flash === "current" ? "#f87171" : "transparent",
+                    transition: "background-color 0.3s ease, border-color 0.3s ease",
+                  }}
+                >
+                  <span className="text-xl font-semibold text-gray-900">{opponent.name}</span>
+                  {[opponent.category, opponent.location].filter(Boolean).length > 0 && (
+                    <p className="text-xs text-gray-400 mt-1.5">
+                      {[opponent.category, opponent.location].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
+                  {opponent.description && (
+                    <p className="text-xs text-gray-400 mt-1 italic">{opponent.description}</p>
+                  )}
+                </button>
+                <button
+                  onClick={handleSkipOpponent}
+                  disabled={!!flash}
+                  className="text-xs text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors underline underline-offset-2 text-center"
+                >
+                  Not my experience
+                </button>
+              </div>
             </div>
           )}
         </div>
 
-        <div className="mt-6 flex flex-col items-center gap-3">
-          <p className="text-xs text-gray-300">← → arrow keys · swipe on mobile</p>
-          <button
-            onClick={handleSkip}
-            disabled={!!flash}
-            className="text-xs text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors underline underline-offset-2"
-          >
-            Not my experience
-          </button>
-          <p className="text-sm text-gray-400">
-            {totalUnranked} experience{totalUnranked !== 1 ? "s" : ""} left to rank
-          </p>
-        </div>
+        <p className="text-center text-sm text-gray-400 mt-6">
+          {totalUnranked} experience{totalUnranked !== 1 ? "s" : ""} left to rank
+        </p>
       </div>
     </div>
   )
