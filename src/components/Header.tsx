@@ -6,6 +6,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { CoinAnimation, COIN_ANIM_DURATION_MS } from "./CoinAnimation"
 import { CoinIcon } from "./CoinIcon"
+import { TierBadge } from "./TierBadge"
 
 type User = { id: string; name: string; coins?: number }
 
@@ -28,9 +29,16 @@ export function Header() {
   // Listen for coinGain events dispatched by any page
   useEffect(() => {
     function handleCoinGain(e: Event) {
-      const { from, amount } = (e as CustomEvent<{ from: number; amount: number }>).detail
+      const { from, amount, mini } = (e as CustomEvent<{ from: number; amount: number; mini?: boolean }>).detail
 
-      // Reset counter to pre-gain value, then count up
+      if (mini) {
+        setDisplayedCoins(from + amount)
+        setBump(true)
+        setTimeout(() => setBump(false), 400)
+        return
+      }
+
+      // Reset counter to pre-gain value, then count up with flying animation
       setDisplayedCoins(from)
       setCoinGain({ amount })
 
@@ -75,6 +83,9 @@ export function Header() {
 
           {user && (
             <div className="flex items-center gap-3">
+              {/* Tier badge */}
+              <TierBadge coins={displayedCoins} />
+
               {/* Coin counter */}
               <div
                 id="coin-counter"

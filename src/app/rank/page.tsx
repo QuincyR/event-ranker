@@ -18,6 +18,19 @@ interface RankingState {
 
 type User = { id: string; name: string }
 
+const TIMER_MS = 7000
+
+const FLAMES = [
+  { id: 0, x: -130, delay: 0.00, dur: 1.10 },
+  { id: 1, x: -70,  delay: 0.12, dur: 0.95 },
+  { id: 2, x: -20,  delay: 0.05, dur: 1.20 },
+  { id: 3, x:  40,  delay: 0.18, dur: 1.05 },
+  { id: 4, x: 100,  delay: 0.08, dur: 1.15 },
+  { id: 5, x: 150,  delay: 0.22, dur: 0.90 },
+  { id: 6, x: -100, delay: 0.30, dur: 1.00 },
+  { id: 7, x:  70,  delay: 0.15, dur: 1.10 },
+]
+
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {
@@ -25,6 +38,12 @@ function shuffle<T>(arr: T[]): T[] {
     ;[a[i], a[j]] = [a[j], a[i]]
   }
   return a
+}
+
+function timerColor(progress: number): string {
+  if (progress > 50) return "#22c55e"
+  if (progress > 20) return "#eab308"
+  return "#ef4444"
 }
 
 export default function RankPage() {
@@ -43,6 +62,66 @@ export default function RankPage() {
   const [flash, setFlash] = useState<"current" | "opponent" | null>(null)
   const [cardVisible, setCardVisible] = useState(true)
   const touchStartX = useRef<number | null>(null)
+
+  // Timer + streak state
+  const [timerProgress, setTimerProgress] = useState(100)
+  const [streak, setStreak] = useState(0)
+  const [showHotStreak, setShowHotStreak] = useState(false)
+  const [streakBump, setStreakBump] = useState(false)
+  const [streakDelta, setStreakDelta] = useState(false)
+  const streakRef = useRef(0)
+  const timerStartRef = useRef(Date.now())
+  const timerRafRef = useRef<number | null>(null)
+  const hotStreakShownRef = useRef(false)
+
+  // RAF timer loop
+  useEffect(() => {
+    if (state.phase !== "ranking") {
+      if (timerRafRef.current) cancelAnimationFrame(timerRafRef.current)
+      return
+    }
+
+    timerStartRef.current = Date.now()
+
+    function tick() {
+      const elapsed = Date.now() - timerStartRef.current
+      const progress = Math.max(0, (TIMER_MS - elapsed) / TIMER_MS * 100)
+      setTimerProgress(progress)
+
+      if (elapsed >= TIMER_MS && streakRef.current > 0) {
+        streakRef.current = 0
+        setStreak(0)
+        setShowHotStreak(false)
+        hotStreakShownRef.current = false
+      }
+
+      timerRafRef.current = requestAnimationFrame(tick)
+    }
+
+    timerRafRef.current = requestAnimationFrame(tick)
+    return () => { if (timerRafRef.current) cancelAnimationFrame(timerRafRef.current) }
+  }, [state.phase]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const grantStreakCoins = useCallback(async (bonus: number, userId: string) => {
+    try {
+      const res = await fetch(`/api/users/${userId}/coins`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: bonus }),
+      })
+      const data: { newCoins: number } = await res.json()
+      const stored = localStorage.getItem("user")
+      if (stored) {
+        const u = JSON.parse(stored)
+        localStorage.setItem("user", JSON.stringify({ ...u, coins: data.newCoins }))
+      }
+      window.dispatchEvent(new CustomEvent("coinGain", {
+        detail: { from: data.newCoins - bonus, amount: bonus, mini: true },
+      }))
+    } catch {
+      // non-critical
+    }
+  }, [])
 
   const saveProgress = useCallback(async (userId: string, ranked: Event[], skipped: Event[], earnedCoins = 0) => {
     const res = await fetch(`/api/users/${userId}/ranking`, {
@@ -99,7 +178,6 @@ export default function RankPage() {
             setState({ phase: "done", ranked: newRanked, toRank: [], current: null, lo: 0, hi: 0, skipped, isRerank: false })
             return
           }
-          // Seed second item so first comparison always shows two cards
           const [first, second, ...rest] = shuffled
           setState({ phase: "ranking", ranked: [second], toRank: rest, current: first, lo: 0, hi: 1, skipped, isRerank: false })
           return
@@ -126,6 +204,46 @@ export default function RankPage() {
 
   function handleButtonClick(preferCurrent: boolean) {
     if (flash) return
+
+    // Streak + timer logic
+    const elapsed = Date.now() - timerStartRef.current
+    const withinTimer = elapsed < TIMER_MS
+
+    // Reset timer immediately
+    timerStartRef.current = Date.now()
+    setTimerProgress(100)
+
+    if (withinTimer) {
+      const newStreak = streakRef.current + 1
+      streakRef.current = newStreak
+      setStreak(newStreak)
+
+      // Bounce animation on streak counter
+      setStreakBump(true)
+      setTimeout(() => setStreakBump(false), 300)
+
+      // Hot streak trigger at exactly 5
+      if (newStreak === 5 && !hotStreakShownRef.current) {
+        hotStreakShownRef.current = true
+        setShowHotStreak(true)
+        setTimeout(() => setShowHotStreak(false), 2500)
+      }
+
+      // Bonus coins: picks after streak 5
+      if (newStreak > 5 && user) {
+        const bonus = Math.floor(newStreak / 5)
+        setStreakDelta(true)
+        setTimeout(() => setStreakDelta(false), 700)
+        grantStreakCoins(bonus, user.id)
+      }
+    } else {
+      // Expired — reset streak
+      streakRef.current = 0
+      setStreak(0)
+      setShowHotStreak(false)
+      hotStreakShownRef.current = false
+    }
+
     setFlash(preferCurrent ? "current" : "opponent")
     setTimeout(() => setCardVisible(false), 150)
     setTimeout(() => {
@@ -210,6 +328,13 @@ export default function RankPage() {
 
   function handleRerank(event: Event) {
     if (!user) return
+
+    // Reset streak when entering a rerank
+    streakRef.current = 0
+    setStreak(0)
+    setShowHotStreak(false)
+    hotStreakShownRef.current = false
+
     const newRanked = state.ranked.filter((e) => e.id !== event.id)
     if (newRanked.length === 0) {
       saveProgress(user.id, [event], state.skipped, 0)
@@ -322,6 +447,46 @@ export default function RankPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Hot streak overlay */}
+      {showHotStreak && (
+        <div className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center">
+          {/* Background glow */}
+          <div
+            className="absolute inset-0"
+            style={{ background: "radial-gradient(ellipse at center, rgba(251,146,60,0.15) 0%, transparent 70%)" }}
+          />
+
+          {/* Floating flames */}
+          {FLAMES.map((f) => (
+            <div
+              key={f.id}
+              className="absolute text-5xl"
+              style={{
+                bottom: "42%",
+                left: `calc(50% + ${f.x}px)`,
+                animation: `flameFloat ${f.dur}s ease-out ${f.delay}s both`,
+              }}
+            >
+              🔥
+            </div>
+          ))}
+
+          {/* Main text */}
+          <div
+            className="relative text-center"
+            style={{ animation: "hotStreakPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both" }}
+          >
+            <p
+              className="text-5xl font-black text-orange-500"
+              style={{ textShadow: "0 0 30px rgba(249,115,22,0.5)" }}
+            >
+              Hot Streak!
+            </p>
+            <p className="text-xl text-orange-400 mt-1 font-semibold">🔥 5 picks in a row</p>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-2xl mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-8">
           <Link href="/home" className="text-sm text-gray-400 hover:text-gray-600">
@@ -336,7 +501,8 @@ export default function RankPage() {
           </button>
         </div>
 
-        <div className="mb-8">
+        {/* Overall progress */}
+        <div className="mb-6">
           <p className="text-sm text-gray-400 mb-1">
             {Math.round((progress / totalEvents) * 100)}% ranked
           </p>
@@ -346,6 +512,58 @@ export default function RankPage() {
               style={{ width: `${(progress / totalEvents) * 100}%` }}
             />
           </div>
+        </div>
+
+        {/* 7-second timer bar */}
+        <div className="mb-3">
+          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${timerProgress}%`,
+                backgroundColor: timerColor(timerProgress),
+                transition: "width 0.05s linear, background-color 0.5s ease",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Streak counter */}
+        <div className="relative flex items-center justify-center gap-1.5 mb-4 h-8">
+          {streak > 0 && (
+            <>
+              <span
+                className="text-xl"
+                style={{
+                  display: "inline-block",
+                  transform: streakBump ? "scale(1.6)" : "scale(1)",
+                  transition: "transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                }}
+              >
+                {streak >= 5 ? "🔥" : "⚡"}
+              </span>
+              <span
+                className={`font-bold text-base ${streak >= 5 ? "text-orange-500" : "text-gray-500"}`}
+                style={{
+                  display: "inline-block",
+                  transform: streakBump ? "scale(1.15)" : "scale(1)",
+                  transition: "transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                }}
+              >
+                {streak} {streak >= 5 ? "streak!" : "in a row"}
+              </span>
+            </>
+          )}
+
+          {/* Floating "+N 🔥" delta when streak coins are earned */}
+          {streakDelta && streak > 5 && (
+            <span
+              className="absolute -top-5 left-1/2 -translate-x-1/2 text-sm font-bold text-orange-400 pointer-events-none"
+              style={{ animation: "floatUp 0.7s ease-out forwards" }}
+            >
+              +{Math.floor(streak / 5)} 🔥
+            </span>
+          )}
         </div>
 
         <h2 className="text-xl font-semibold text-gray-700 text-center mb-8">
@@ -378,8 +596,9 @@ export default function RankPage() {
                   className="p-8 rounded-2xl shadow-sm border-2 text-center flex-1"
                   style={{
                     backgroundColor: flash === "current" ? "#dcfce7" : flash === "opponent" ? "#fee2e2" : "white",
-                    borderColor: flash === "current" ? "#4ade80" : flash === "opponent" ? "#f87171" : "transparent",
+                    borderColor: flash === "current" ? "#4ade80" : flash === "opponent" ? "#f87171" : streak >= 5 ? "#fb923c" : "transparent",
                     transition: "background-color 0.3s ease, border-color 0.3s ease",
+                    boxShadow: streak >= 5 ? "0 0 12px rgba(251,146,60,0.2)" : undefined,
                   }}
                 >
                   <span className="text-xl font-semibold text-gray-900">{current.name}</span>
@@ -407,8 +626,9 @@ export default function RankPage() {
                   className="p-8 rounded-2xl shadow-sm border-2 text-center flex-1"
                   style={{
                     backgroundColor: flash === "opponent" ? "#dcfce7" : flash === "current" ? "#fee2e2" : "white",
-                    borderColor: flash === "opponent" ? "#4ade80" : flash === "current" ? "#f87171" : "transparent",
+                    borderColor: flash === "opponent" ? "#4ade80" : flash === "current" ? "#f87171" : streak >= 5 ? "#fb923c" : "transparent",
                     transition: "background-color 0.3s ease, border-color 0.3s ease",
+                    boxShadow: streak >= 5 ? "0 0 12px rgba(251,146,60,0.2)" : undefined,
                   }}
                 >
                   <span className="text-xl font-semibold text-gray-900">{opponent.name}</span>
