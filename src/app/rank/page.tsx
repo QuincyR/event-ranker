@@ -330,7 +330,7 @@ export default function RankPage() {
                 <button
                   onClick={() => handleButtonClick(true)}
                   disabled={!!flash}
-                  className="p-8 rounded-2xl shadow-sm border-2 text-center"
+                  className="p-8 rounded-2xl shadow-sm border-2 text-center flex-1"
                   style={{
                     backgroundColor: flash === "current" ? "#dcfce7" : flash === "opponent" ? "#fee2e2" : "white",
                     borderColor: flash === "current" ? "#4ade80" : flash === "opponent" ? "#f87171" : "transparent",
@@ -359,7 +359,7 @@ export default function RankPage() {
                 <button
                   onClick={() => handleButtonClick(false)}
                   disabled={!!flash}
-                  className="p-8 rounded-2xl shadow-sm border-2 text-center"
+                  className="p-8 rounded-2xl shadow-sm border-2 text-center flex-1"
                   style={{
                     backgroundColor: flash === "opponent" ? "#dcfce7" : flash === "current" ? "#fee2e2" : "white",
                     borderColor: flash === "opponent" ? "#4ade80" : flash === "current" ? "#f87171" : "transparent",
