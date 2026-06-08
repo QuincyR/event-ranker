@@ -209,13 +209,9 @@ export default function RankPage() {
   function handleButtonClick(preferCurrent: boolean) {
     if (flash) return
 
-    // Streak + timer logic
+    // Measure elapsed BEFORE resetting — timer resets when new cards appear
     const elapsed = Date.now() - timerStartRef.current
     const withinTimer = elapsed < TIMER_MS
-
-    // Reset timer immediately
-    timerStartRef.current = Date.now()
-    setTimerProgress(100)
 
     if (withinTimer) {
       const newStreak = streakRef.current + 1
@@ -233,9 +229,9 @@ export default function RankPage() {
         setTimeout(() => setShowHotStreak(false), 2500)
       }
 
-      // Bonus coins: picks after streak 5
+      // Bonus coins: picks after streak 5, capped at +5
       if (newStreak > 5 && user) {
-        const bonus = Math.floor(newStreak / 5)
+        const bonus = Math.min(5, Math.floor(newStreak / 5))
         setStreakNotifKey((k) => k + 1)
         setStreakNotif(bonus)
         setTimeout(() => setStreakNotif(null), 1200)
@@ -254,7 +250,12 @@ export default function RankPage() {
     setTimeout(() => {
       setFlash(null)
       handleChoice(preferCurrent)
-      requestAnimationFrame(() => requestAnimationFrame(() => setCardVisible(true)))
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        setCardVisible(true)
+        // Reset timer when new cards are actually visible
+        timerStartRef.current = Date.now()
+        setTimerProgress(100)
+      }))
     }, 500)
   }
 
@@ -550,7 +551,7 @@ export default function RankPage() {
               +{streakNotif} <CoinIcon size={14} />
             </span>
           )}
-          {streak > 0 && (
+          {streak >= 5 && (
             <>
               <span
                 className="text-xl"
@@ -560,17 +561,17 @@ export default function RankPage() {
                   transition: "transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)",
                 }}
               >
-                {streak >= 5 ? "🔥" : "⚡"}
+                🔥
               </span>
               <span
-                className={`font-bold text-base ${streak >= 5 ? "text-orange-500" : "text-gray-500"}`}
+                className="font-bold text-base text-orange-500"
                 style={{
                   display: "inline-block",
                   transform: streakBump ? "scale(1.15)" : "scale(1)",
                   transition: "transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)",
                 }}
               >
-                {streak} {streak >= 5 ? "streak!" : "in a row"}
+                {streak} streak!
               </span>
             </>
           )}
