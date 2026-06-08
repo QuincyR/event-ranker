@@ -164,6 +164,21 @@ export default function RankPage() {
     setState({ ...state, ranked: newRanked, lo: 0, hi: newRanked.length, skipped: newSkipped })
   }
 
+  function handleRerank(event: Event) {
+    if (!user) return
+    const newRanked = state.ranked.filter((e) => e.id !== event.id)
+    saveProgress(user.id, newRanked, state.skipped)
+    setState({
+      phase: "ranking",
+      ranked: newRanked,
+      toRank: [],
+      current: event,
+      lo: 0,
+      hi: newRanked.length,
+      skipped: state.skipped,
+    })
+  }
+
   function handleUndo() {
     if (history.length === 0) return
     const prev = history[history.length - 1]
@@ -207,7 +222,7 @@ export default function RankPage() {
             ← Back
           </Link>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{user.name}&apos;s Experiences</h1>
-          <p className="text-gray-500 mb-8">All caught up! Head to rankings to see how you compare.</p>
+          <p className="text-gray-500 mb-8">All caught up! Tap any experience to re-rank it.</p>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             {state.ranked.length === 0 ? (
@@ -216,19 +231,26 @@ export default function RankPage() {
                 <Link href="/add" className="underline">Add some!</Link>
               </p>
             ) : (
-              <ol className="space-y-3">
+              <ol className="divide-y divide-gray-50">
                 {state.ranked.map((event, i) => {
                   const meta = [event.category, event.location].filter(Boolean).join(" · ")
                   return (
-                    <li key={event.id} className="flex items-start gap-4">
-                      <span className="text-2xl font-bold text-gray-200 w-8 text-right shrink-0 pt-0.5">
+                    <li key={event.id} className="flex items-center gap-4 py-3 group">
+                      <span className="text-xl font-bold text-gray-200 w-8 text-right shrink-0">
                         {i + 1}
                       </span>
-                      <div>
-                        <p className="text-gray-800 font-medium">{event.name}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-gray-800 font-medium leading-snug">{event.name}</p>
                         {meta && <p className="text-xs text-gray-400 mt-0.5">{meta}</p>}
-                        {event.description && <p className="text-xs text-gray-400 mt-0.5 italic">{event.description}</p>}
+                        {event.description && <p className="text-xs text-gray-400 mt-0.5 italic line-clamp-1">{event.description}</p>}
                       </div>
+                      <button
+                        onClick={() => handleRerank(event)}
+                        className="shrink-0 text-xs text-gray-300 hover:text-[#C8102E] transition-colors opacity-0 group-hover:opacity-100"
+                        title="Re-rank this experience"
+                      >
+                        ↺ rerank
+                      </button>
                     </li>
                   )
                 })}
