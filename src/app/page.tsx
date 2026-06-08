@@ -52,7 +52,7 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-[#001a3a] flex flex-col items-center justify-center px-4">
       <div className="text-center mb-8">
         <Image
           src="/whiffenpoofs-logo.png"
@@ -61,8 +61,8 @@ export default function SignInPage() {
           height={120}
           className="mx-auto mb-4 object-contain"
         />
-        <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-2">WhiffenBeli</h1>
-        <p className="text-gray-500 text-sm">Rank the year&apos;s Whiffenpoof memories</p>
+        <h1 className="text-4xl font-bold text-white tracking-tight mb-2">WhiffenBeli</h1>
+        <p className="text-blue-300 text-sm">Rank the year&apos;s Whiffenpoof memories</p>
       </div>
 
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-6">
