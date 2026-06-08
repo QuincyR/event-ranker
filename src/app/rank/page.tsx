@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
 
-type Event = { id: string; name: string; location?: string | null; category?: string | null }
+type Event = { id: string; name: string; location?: string | null; category?: string | null; description?: string | null }
 
 interface RankingState {
   phase: "loading" | "ranking" | "done"
@@ -195,6 +195,7 @@ export default function RankPage() {
                       <div>
                         <p className="text-gray-800 font-medium">{event.name}</p>
                         {meta && <p className="text-xs text-gray-400 mt-0.5">{meta}</p>}
+                        {event.description && <p className="text-xs text-gray-400 mt-0.5 italic">{event.description}</p>}
                       </div>
                     </li>
                   )
@@ -269,6 +270,9 @@ export default function RankPage() {
                     {[current?.category, current?.location].filter(Boolean).join(" · ")}
                   </p>
                 )}
+                {current?.description && (
+                  <p className="text-xs text-gray-400 mt-1 italic">{current.description}</p>
+                )}
                 <p className="text-sm text-gray-400 mt-2">Tap to confirm first ranking</p>
               </button>
             </div>
@@ -290,6 +294,9 @@ export default function RankPage() {
                     {[current?.category, current?.location].filter(Boolean).join(" · ")}
                   </p>
                 )}
+                {current?.description && (
+                  <p className="text-xs text-gray-400 mt-1 italic">{current.description}</p>
+                )}
               </button>
               <button
                 onClick={() => handleButtonClick(false)}
@@ -306,6 +313,9 @@ export default function RankPage() {
                   <p className="text-xs text-gray-400 mt-1.5">
                     {[opponent.category, opponent.location].filter(Boolean).join(" · ")}
                   </p>
+                )}
+                {opponent.description && (
+                  <p className="text-xs text-gray-400 mt-1 italic">{opponent.description}</p>
                 )}
               </button>
             </div>

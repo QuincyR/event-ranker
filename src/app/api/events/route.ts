@@ -9,7 +9,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const { name, location, date, category } = await req.json()
+  const { name, location, description, date, category } = await req.json()
   if (!name?.trim()) {
     return NextResponse.json({ error: "Name required" }, { status: 400 })
   }
@@ -17,6 +17,7 @@ export async function POST(req: Request) {
     data: {
       name: name.trim(),
       location: location?.trim() || null,
+      description: description?.trim() || null,
       date: date ? new Date(date) : null,
       category: category || null,
     },

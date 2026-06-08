@@ -14,10 +14,11 @@ model User {
 }
 
 model Event {
-  id        String    @id @default(cuid())
-  name      String
-  location  String?
-  date      DateTime?
-  category  String?
-  createdAt DateTime  @default(now())
+  id          String    @id @default(cuid())
+  name        String
+  location    String?
+  description String?
+  date        DateTime?
+  category    String?
+  createdAt   DateTime  @default(now())
 }

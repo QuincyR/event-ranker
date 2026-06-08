@@ -8,6 +8,7 @@ import { CATEGORIES } from "@/lib/constants"
 export default function AddExperiencePage() {
   const [name, setName] = useState("")
   const [location, setLocation] = useState("")
+  const [description, setDescription] = useState("")
   const [date, setDate] = useState("")
   const [category, setCategory] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -32,6 +33,7 @@ export default function AddExperiencePage() {
       body: JSON.stringify({
         name: name.trim(),
         location: location.trim(),
+        description: description.trim() || null,
         date: date || null,
         category: category || null,
       }),
@@ -80,6 +82,19 @@ export default function AddExperiencePage() {
                 onChange={(e) => { setLocation(e.target.value); setError("") }}
                 placeholder="e.g. Seattle, WA or Lima, Peru"
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Description <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Any extra context or memories..."
+                rows={2}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black resize-none"
               />
             </div>
 

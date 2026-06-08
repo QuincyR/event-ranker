@@ -9,6 +9,7 @@ type EventData = {
   id: string
   name: string
   location?: string | null
+  description?: string | null
   date?: string | null
   category?: string | null
   createdAt: string
@@ -40,6 +41,9 @@ function EventRow({ rank, event, extra }: { rank?: number | null; event: EventDa
           <p className="text-xs text-gray-400 mt-0.5">
             {[meta, extra].filter(Boolean).join(" · ")}
           </p>
+        )}
+        {event.description && (
+          <p className="text-xs text-gray-400 mt-0.5 italic">{event.description}</p>
         )}
       </div>
     </li>
