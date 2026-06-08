@@ -49,7 +49,7 @@ export default function HomePage() {
         {/* Welcome card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
           <p className="text-gray-700 leading-relaxed mb-5">
-            Welcome to WhiffenBeli, the place to rank (and reminisce about) Whiffenpoof experiences throughout the year. Rank experiences, add any you think are missing, and compare your rankings with the other Whiffs!
+            Rank experiences and compare your rankings with the other Whiffs!
           </p>
           <div className="flex flex-wrap gap-2">
             <Link
