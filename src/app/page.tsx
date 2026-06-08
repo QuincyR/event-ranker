@@ -38,7 +38,7 @@ export default function SignInPage() {
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault()
     setError("")
-    if (!selectedName) { setError("Please select your name"); return }
+    if (!selectedName || !NAMES.includes(selectedName as typeof NAMES[number])) { setError("You're not a Whiffenpoof!"); return }
     if (password !== "testing") { setError("Incorrect password"); return }
 
     const res = await fetch("/api/users", {
@@ -52,7 +52,7 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#001a3a] flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-[#002654] flex flex-col items-center justify-center px-4">
       <div className="text-center mb-8">
         <Image
           src="/whiffenpoofs-logo.png"
@@ -72,7 +72,7 @@ export default function SignInPage() {
             onChange={(e) => { setSelectedName(e.target.value); setError("") }}
             className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C8102E] bg-white text-gray-700"
           >
-            <option value="">Select your name...</option>
+            <option value="">Name</option>
             {NAMES.map((name) => (
               <option key={name} value={name}>{name}</option>
             ))}
