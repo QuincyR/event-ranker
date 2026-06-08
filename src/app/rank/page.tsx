@@ -18,7 +18,7 @@ interface RankingState {
 
 type User = { id: string; name: string }
 
-const POOL_SIZE = 3
+const POOL_SIZE = 10
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
