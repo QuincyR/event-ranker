@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { WhiffenpoofsLogo } from "./WhiffenpoofsLogo"
+import Image from "next/image"
 
 type User = { id: string; name: string }
 
@@ -20,7 +20,13 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 z-10 bg-black border-b border-neutral-800">
       <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
         <Link href={user ? "/home" : "/"} className="flex items-center gap-2.5">
-          <WhiffenpoofsLogo className="h-7 w-auto text-[#C8102E]" />
+          <Image
+            src="/whiffenpoofs-logo.png"
+            alt="Whiffenpoofs"
+            width={36}
+            height={36}
+            className="object-contain"
+          />
           <span className="font-bold text-white text-lg tracking-tight">WhiffenBeli</span>
         </Link>
         {user && (

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { WhiffenpoofsLogo } from "@/components/WhiffenpoofsLogo"
+import Image from "next/image"
 
 const NAMES = [
   "Emily", "Eunice", "Peighton", "Yixiao", "Tabatha",
@@ -54,7 +54,13 @@ export default function SignInPage() {
   return (
     <div className="min-h-screen bg-[#00356B] flex flex-col items-center justify-center px-4">
       <div className="text-center mb-8">
-        <WhiffenpoofsLogo className="h-16 w-auto text-[#C8102E] mx-auto mb-4" />
+        <Image
+          src="/whiffenpoofs-logo.png"
+          alt="Whiffenpoofs"
+          width={120}
+          height={120}
+          className="mx-auto mb-4 object-contain"
+        />
         <h1 className="text-4xl font-bold text-white tracking-tight mb-2">WhiffenBeli</h1>
         <p className="text-blue-200 text-sm">Rank the year&apos;s Whiffenpoof memories</p>
       </div>
