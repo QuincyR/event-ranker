@@ -67,16 +67,13 @@ export default function SignInPage() {
 
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-6">
         <form onSubmit={handleJoin} className="flex flex-col gap-3">
-          <select
+          <input
+            type="text"
             value={selectedName}
             onChange={(e) => { setSelectedName(e.target.value); setError("") }}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C8102E] bg-white text-gray-700"
-          >
-            <option value="">Name</option>
-            {NAMES.map((name) => (
-              <option key={name} value={name}>{name}</option>
-            ))}
-          </select>
+            placeholder="Name"
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C8102E]"
+          />
 
           <div className="relative">
             <input
