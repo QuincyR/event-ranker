@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react"
 import Link from "next/link"
+import { CoinIcon } from "@/components/CoinIcon"
 
 type Event = { id: string; name: string; location?: string | null; category?: string | null; description?: string | null }
 
@@ -69,6 +70,8 @@ export default function RankPage() {
   const [showHotStreak, setShowHotStreak] = useState(false)
   const [streakBump, setStreakBump] = useState(false)
   const [streakDelta, setStreakDelta] = useState(false)
+  const [rankReward, setRankReward] = useState(false)
+  const [rankRewardKey, setRankRewardKey] = useState(0)
   const streakRef = useRef(0)
   const timerStartRef = useRef(Date.now())
   const timerRafRef = useRef<number | null>(null)
@@ -116,7 +119,7 @@ export default function RankPage() {
         localStorage.setItem("user", JSON.stringify({ ...u, coins: data.newCoins }))
       }
       window.dispatchEvent(new CustomEvent("coinGain", {
-        detail: { from: data.newCoins - bonus, amount: bonus, mini: true },
+        detail: { from: data.newCoins - bonus, amount: bonus },
       }))
     } catch {
       // non-critical
@@ -266,6 +269,12 @@ export default function RankPage() {
     if (newLo >= newHi) {
       const newRanked = [...ranked.slice(0, newLo), current, ...ranked.slice(newLo)]
       saveProgress(user.id, newRanked, skipped, state.isRerank ? 0 : 5)
+
+      if (!state.isRerank) {
+        setRankRewardKey((k) => k + 1)
+        setRankReward(true)
+        setTimeout(() => setRankReward(false), 1800)
+      }
 
       if (toRank.length === 0) {
         setState({ ...state, phase: "done", ranked: newRanked, toRank: [], current: null, lo: 0, hi: 0 })
@@ -555,13 +564,13 @@ export default function RankPage() {
             </>
           )}
 
-          {/* Floating "+N 🔥" delta when streak coins are earned */}
+          {/* Floating "+N [coin]" delta when streak coins are earned */}
           {streakDelta && streak > 5 && (
             <span
-              className="absolute -top-5 left-1/2 -translate-x-1/2 text-sm font-bold text-orange-400 pointer-events-none"
+              className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-0.5 text-sm font-bold text-yellow-500 pointer-events-none"
               style={{ animation: "floatUp 0.7s ease-out forwards" }}
             >
-              +{Math.floor(streak / 5)} 🔥
+              +{Math.floor(streak / 5)} <CoinIcon size={14} />
             </span>
           )}
         </div>
@@ -653,7 +662,19 @@ export default function RankPage() {
           )}
         </div>
 
-        <p className="text-center text-sm text-gray-400 mt-6">
+        <div className="relative h-8 mt-4 flex items-center justify-center">
+          {rankReward && (
+            <span
+              key={rankRewardKey}
+              className="absolute flex items-center gap-1.5 text-sm font-semibold text-yellow-600 pointer-events-none whitespace-nowrap"
+              style={{ animation: "floatUp 1.8s ease-out forwards" }}
+            >
+              Experience ranked! +5 <CoinIcon size={15} />
+            </span>
+          )}
+        </div>
+
+        <p className="text-center text-sm text-gray-400">
           {totalUnranked} experience{totalUnranked !== 1 ? "s" : ""} left to rank
         </p>
       </div>
