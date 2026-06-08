@@ -62,7 +62,7 @@ export default function SignInPage() {
           className="mx-auto mb-4 object-contain"
         />
         <h1 className="text-4xl font-bold text-white tracking-tight mb-2">WhiffenBeli</h1>
-        <p className="text-blue-300 text-sm">Rank the year&apos;s Whiffenpoof memories</p>
+        <p className="text-slate-300 text-sm">Rank the year&apos;s Whiffenpoof memories</p>
       </div>
 
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-6">
