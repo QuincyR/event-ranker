@@ -17,6 +17,15 @@ interface RankingState {
 
 type User = { id: string; name: string }
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
 export default function RankPage() {
   const [user, setUser] = useState<User | null>(null)
   const [state, setState] = useState<RankingState>({
@@ -62,11 +71,25 @@ export default function RankPage() {
       .then((data) => {
         if (!data) return
         const { ranked, unranked, skipped = [] } = data as { ranked: Event[]; unranked: Event[]; skipped: Event[] }
-        if (unranked.length === 0) {
+        const shuffled = shuffle(unranked)
+        if (shuffled.length === 0) {
           setState({ phase: "done", ranked, toRank: [], current: null, lo: 0, hi: 0, skipped })
           return
         }
-        const [current, ...rest] = unranked
+        if (ranked.length === 0) {
+          if (shuffled.length === 1) {
+            // Only one event ever; auto-place it without a comparison
+            const newRanked = [shuffled[0]]
+            saveProgress(u.id, newRanked, skipped)
+            setState({ phase: "done", ranked: newRanked, toRank: [], current: null, lo: 0, hi: 0, skipped })
+            return
+          }
+          // Seed second item into ranked so first comparison always shows two cards
+          const [first, second, ...rest] = shuffled
+          setState({ phase: "ranking", ranked: [second], toRank: rest, current: first, lo: 0, hi: 1, skipped })
+          return
+        }
+        const [current, ...rest] = shuffled
         setState({ phase: "ranking", ranked, toRank: rest, current, lo: 0, hi: ranked.length, skipped })
       })
       .catch(() => {
@@ -159,14 +182,33 @@ export default function RankPage() {
 
     const newRanked = ranked.filter((e) => e.id !== opponent.id)
     const newSkipped = [...skipped, opponent]
-    saveProgress(user.id, newRanked, newSkipped)
 
+    if (newRanked.length === 0) {
+      // All opponents skipped; place current as sole ranked item
+      const finalRanked = [state.current!]
+      saveProgress(user.id, finalRanked, newSkipped)
+      if (state.toRank.length === 0) {
+        setState({ phase: "done", ranked: finalRanked, toRank: [], current: null, lo: 0, hi: 0, skipped: newSkipped })
+      } else {
+        const [next, ...remaining] = state.toRank
+        setState({ phase: "ranking", ranked: finalRanked, toRank: remaining, current: next, lo: 0, hi: 1, skipped: newSkipped })
+      }
+      return
+    }
+
+    saveProgress(user.id, newRanked, newSkipped)
     setState({ ...state, ranked: newRanked, lo: 0, hi: newRanked.length, skipped: newSkipped })
   }
 
   function handleRerank(event: Event) {
     if (!user) return
     const newRanked = state.ranked.filter((e) => e.id !== event.id)
+    if (newRanked.length === 0) {
+      // Rerankng the only item — auto-place it back at #1
+      saveProgress(user.id, [event], state.skipped)
+      setState({ phase: "done", ranked: [event], toRank: [], current: null, lo: 0, hi: 0, skipped: state.skipped })
+      return
+    }
     saveProgress(user.id, newRanked, state.skipped)
     setState({
       phase: "ranking",
@@ -320,33 +362,7 @@ export default function RankPage() {
             handleButtonClick(deltaX < 0)
           }}
         >
-          {ranked.length === 0 || !opponent ? (
-            <div className="flex flex-col items-center gap-3">
-              <button
-                onClick={() => handleButtonClick(true)}
-                disabled={!!flash}
-                className="w-full max-w-sm p-8 bg-white rounded-2xl shadow-sm border-2 border-[#00356B] text-center hover:bg-gray-50 transition-colors"
-              >
-                <span className="text-xl font-semibold text-gray-900">{current?.name}</span>
-                {[current?.category, current?.location].filter(Boolean).length > 0 && (
-                  <p className="text-xs text-gray-400 mt-1.5">
-                    {[current?.category, current?.location].filter(Boolean).join(" · ")}
-                  </p>
-                )}
-                {current?.description && (
-                  <p className="text-xs text-gray-400 mt-1 italic line-clamp-2">{current.description}</p>
-                )}
-                <p className="text-sm text-gray-400 mt-2">Tap to confirm first ranking</p>
-              </button>
-              <button
-                onClick={handleSkipCurrent}
-                disabled={!!flash}
-                className="text-xs text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors underline underline-offset-2"
-              >
-                Not my experience
-              </button>
-            </div>
-          ) : (
+          {opponent && (
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
                 <button
