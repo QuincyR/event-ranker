@@ -13,6 +13,7 @@ interface RankingState {
   lo: number
   hi: number
   skipped: Event[]
+  isRerank: boolean
 }
 
 type User = { id: string; name: string }
@@ -36,21 +37,34 @@ export default function RankPage() {
     lo: 0,
     hi: 0,
     skipped: [],
+    isRerank: false,
   })
   const [history, setHistory] = useState<RankingState[]>([])
   const [flash, setFlash] = useState<"current" | "opponent" | null>(null)
   const [cardVisible, setCardVisible] = useState(true)
   const touchStartX = useRef<number | null>(null)
 
-  const saveProgress = useCallback(async (userId: string, ranked: Event[], skipped: Event[]) => {
-    await fetch(`/api/users/${userId}/ranking`, {
+  const saveProgress = useCallback(async (userId: string, ranked: Event[], skipped: Event[], earnedCoins = 0) => {
+    const res = await fetch(`/api/users/${userId}/ranking`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         rankedEvents: ranked.map((e) => e.id),
         skippedEvents: skipped.map((e) => e.id),
+        earnedCoins,
       }),
     })
+    if (earnedCoins > 0) {
+      const data: { newCoins: number } = await res.json()
+      const stored = localStorage.getItem("user")
+      if (stored) {
+        const u = JSON.parse(stored)
+        localStorage.setItem("user", JSON.stringify({ ...u, coins: data.newCoins }))
+      }
+      window.dispatchEvent(new CustomEvent("coinGain", {
+        detail: { from: data.newCoins - earnedCoins, amount: earnedCoins },
+      }))
+    }
   }, [])
 
   useEffect(() => {
@@ -74,7 +88,7 @@ export default function RankPage() {
         const shuffled = shuffle(unranked)
 
         if (shuffled.length === 0) {
-          setState({ phase: "done", ranked, toRank: [], current: null, lo: 0, hi: 0, skipped })
+          setState({ phase: "done", ranked, toRank: [], current: null, lo: 0, hi: 0, skipped, isRerank: false })
           return
         }
 
@@ -82,17 +96,17 @@ export default function RankPage() {
           if (shuffled.length === 1) {
             const newRanked = [shuffled[0]]
             saveProgress(u.id, newRanked, skipped)
-            setState({ phase: "done", ranked: newRanked, toRank: [], current: null, lo: 0, hi: 0, skipped })
+            setState({ phase: "done", ranked: newRanked, toRank: [], current: null, lo: 0, hi: 0, skipped, isRerank: false })
             return
           }
           // Seed second item so first comparison always shows two cards
           const [first, second, ...rest] = shuffled
-          setState({ phase: "ranking", ranked: [second], toRank: rest, current: first, lo: 0, hi: 1, skipped })
+          setState({ phase: "ranking", ranked: [second], toRank: rest, current: first, lo: 0, hi: 1, skipped, isRerank: false })
           return
         }
 
         const [current, ...rest] = shuffled
-        setState({ phase: "ranking", ranked, toRank: rest, current, lo: 0, hi: ranked.length, skipped })
+        setState({ phase: "ranking", ranked, toRank: rest, current, lo: 0, hi: ranked.length, skipped, isRerank: false })
       })
       .catch(() => {
         localStorage.removeItem("user")
@@ -133,15 +147,15 @@ export default function RankPage() {
 
     if (newLo >= newHi) {
       const newRanked = [...ranked.slice(0, newLo), current, ...ranked.slice(newLo)]
-      saveProgress(user.id, newRanked, skipped)
+      saveProgress(user.id, newRanked, skipped, state.isRerank ? 0 : 5)
 
       if (toRank.length === 0) {
-        setState({ phase: "done", ranked: newRanked, toRank: [], current: null, lo: 0, hi: 0, skipped })
+        setState({ ...state, phase: "done", ranked: newRanked, toRank: [], current: null, lo: 0, hi: 0 })
         return
       }
 
       const [next, ...remaining] = toRank
-      setState({ phase: "ranking", ranked: newRanked, toRank: remaining, current: next, lo: 0, hi: newRanked.length, skipped })
+      setState({ ...state, ranked: newRanked, toRank: remaining, current: next, lo: 0, hi: newRanked.length, isRerank: false })
       return
     }
 
@@ -154,7 +168,7 @@ export default function RankPage() {
     setHistory((h) => [...h, state])
 
     const newSkipped = [...state.skipped, state.current]
-    saveProgress(user.id, state.ranked, newSkipped)
+    saveProgress(user.id, state.ranked, newSkipped, 0)
 
     if (state.toRank.length === 0) {
       setState({ ...state, phase: "done", toRank: [], current: null, lo: 0, hi: 0, skipped: newSkipped })
@@ -162,7 +176,7 @@ export default function RankPage() {
     }
 
     const [next, ...remaining] = state.toRank
-    setState({ ...state, toRank: remaining, current: next, lo: 0, hi: state.ranked.length, skipped: newSkipped })
+    setState({ ...state, toRank: remaining, current: next, lo: 0, hi: state.ranked.length, skipped: newSkipped, isRerank: false })
   }
 
   function handleSkipOpponent() {
@@ -180,17 +194,17 @@ export default function RankPage() {
 
     if (newRanked.length === 0) {
       const finalRanked = [state.current!]
-      saveProgress(user.id, finalRanked, newSkipped)
+      saveProgress(user.id, finalRanked, newSkipped, 0)
       if (state.toRank.length === 0) {
-        setState({ phase: "done", ranked: finalRanked, toRank: [], current: null, lo: 0, hi: 0, skipped: newSkipped })
+        setState({ phase: "done", ranked: finalRanked, toRank: [], current: null, lo: 0, hi: 0, skipped: newSkipped, isRerank: false })
       } else {
         const [next, ...remaining] = state.toRank
-        setState({ phase: "ranking", ranked: finalRanked, toRank: remaining, current: next, lo: 0, hi: 1, skipped: newSkipped })
+        setState({ phase: "ranking", ranked: finalRanked, toRank: remaining, current: next, lo: 0, hi: 1, skipped: newSkipped, isRerank: false })
       }
       return
     }
 
-    saveProgress(user.id, newRanked, newSkipped)
+    saveProgress(user.id, newRanked, newSkipped, 0)
     setState({ ...state, ranked: newRanked, lo: 0, hi: newRanked.length, skipped: newSkipped })
   }
 
@@ -198,11 +212,11 @@ export default function RankPage() {
     if (!user) return
     const newRanked = state.ranked.filter((e) => e.id !== event.id)
     if (newRanked.length === 0) {
-      saveProgress(user.id, [event], state.skipped)
-      setState({ phase: "done", ranked: [event], toRank: [], current: null, lo: 0, hi: 0, skipped: state.skipped })
+      saveProgress(user.id, [event], state.skipped, 0)
+      setState({ phase: "done", ranked: [event], toRank: [], current: null, lo: 0, hi: 0, skipped: state.skipped, isRerank: false })
       return
     }
-    saveProgress(user.id, newRanked, state.skipped)
+    saveProgress(user.id, newRanked, state.skipped, 0)
     setState({
       phase: "ranking",
       ranked: newRanked,
@@ -211,6 +225,7 @@ export default function RankPage() {
       lo: 0,
       hi: newRanked.length,
       skipped: state.skipped,
+      isRerank: true,
     })
   }
 

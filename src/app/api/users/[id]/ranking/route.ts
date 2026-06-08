@@ -32,13 +32,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const { rankedEvents, skippedEvents } = await req.json()
-  const updateData: Record<string, string> = {}
+  const { rankedEvents, skippedEvents, earnedCoins = 0 } = await req.json()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updateData: Record<string, any> = {}
   if (rankedEvents !== undefined) updateData.rankedEvents = JSON.stringify(rankedEvents)
   if (skippedEvents !== undefined) updateData.skippedEvents = JSON.stringify(skippedEvents)
-  const user = await prisma.user.update({
-    where: { id },
-    data: updateData,
-  })
-  return NextResponse.json(user)
+  if (earnedCoins > 0) updateData.coins = { increment: earnedCoins }
+  const user = await prisma.user.update({ where: { id }, data: updateData })
+  return NextResponse.json({ newCoins: user.coins })
 }

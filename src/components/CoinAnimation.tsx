@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { CoinIcon } from "./CoinIcon"
 
 // Total coins in the visual burst (independent of coin amount)
 const NUM_COINS = 10
@@ -59,7 +60,7 @@ export function CoinAnimation({ amount, onComplete }: Props) {
     <div className="fixed inset-0 pointer-events-none z-[9999]" aria-hidden>
       {/* "+N 🪙" reward label */}
       <div
-        className="fixed font-extrabold text-yellow-400 text-3xl select-none"
+        className="fixed font-extrabold text-yellow-400 text-3xl select-none flex items-center gap-2"
         style={{
           left: cx,
           top: cy - 90,
@@ -70,7 +71,7 @@ export function CoinAnimation({ amount, onComplete }: Props) {
           letterSpacing: "-0.5px",
         }}
       >
-        +{amount} 🪙
+        +{amount} <CoinIcon size={36} />
       </div>
 
       {Array.from({ length: NUM_COINS }, (_, i) => {
@@ -87,8 +88,6 @@ export function CoinAnimation({ amount, onComplete }: Props) {
               position: "fixed",
               left: 0,
               top: 0,
-              fontSize: "2rem",
-              lineHeight: 1,
               userSelect: "none",
               transform: `translate(${coinX}px, ${coinY}px) translate(-50%, -50%) scale(${scale})`,
               opacity,
@@ -100,7 +99,7 @@ export function CoinAnimation({ amount, onComplete }: Props) {
                   : "none",
             }}
           >
-            🪙
+            <CoinIcon size={32} />
           </div>
         )
       })}

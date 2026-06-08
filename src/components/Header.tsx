@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { CoinAnimation, COIN_ANIM_DURATION_MS } from "./CoinAnimation"
+import { CoinIcon } from "./CoinIcon"
 
 type User = { id: string; name: string; coins?: number }
 
@@ -77,10 +78,10 @@ export function Header() {
               {/* Coin counter */}
               <div
                 id="coin-counter"
-                className="flex items-center gap-1 text-sm font-semibold text-yellow-400 transition-transform"
+                className="flex items-center gap-1.5 text-sm font-semibold text-yellow-400"
                 style={{ transform: bump ? "scale(1.35)" : "scale(1)", transition: "transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)" }}
               >
-                <span>🪙</span>
+                <CoinIcon size={22} />
                 <span>{displayedCoins}</span>
               </div>
 
