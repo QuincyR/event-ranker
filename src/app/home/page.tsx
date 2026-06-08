@@ -56,13 +56,13 @@ export default function HomePage() {
               href="/rank"
               className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
             >
-              Rank Experiences →
+              Rank Experiences
             </Link>
             <Link
               href="/add"
               className="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
             >
-              + Add Experience
+              Add Experience
             </Link>
             <Link
               href="/rankings"

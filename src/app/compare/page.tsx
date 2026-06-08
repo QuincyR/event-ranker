@@ -133,6 +133,8 @@ export default function ComparePage() {
   const [loading, setLoading] = useState(true)
   const [expandedMost, setExpandedMost] = useState(false)
   const [expandedLeast, setExpandedLeast] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [detailMode, setDetailMode] = useState<"close" | "far">("close")
   const router = useRouter()
 
   useEffect(() => {
@@ -199,22 +201,61 @@ export default function ComparePage() {
               />
             )}
 
-            {comparisons.length > 2 && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">All Whiffs</p>
-                <ul className="space-y-3">
-                  {comparisons.map((comp) => (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-5 pt-5 pb-3">All Whiffs</p>
+              <ul className="divide-y divide-gray-50">
+                {comparisons.map((comp) => {
+                  const isSelected = selectedId === comp.userId
+                  return (
                     <li key={comp.userId}>
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="text-sm font-medium text-gray-800">{comp.name}</span>
-                        <span className="text-xs text-gray-400">{comp.sharedCount} shared</span>
-                      </div>
-                      <SimilarityBar pct={comp.similarity} />
+                      <button
+                        onClick={() => {
+                          setSelectedId(isSelected ? null : comp.userId)
+                          setDetailMode("close")
+                        }}
+                        className="w-full text-left px-5 py-3 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium text-gray-800">{comp.name}</span>
+                          <span className="text-xs text-gray-400">
+                            {comp.sharedCount} shared · {isSelected ? "▲" : "▼"}
+                          </span>
+                        </div>
+                        <SimilarityBar pct={comp.similarity} />
+                      </button>
+
+                      {isSelected && (
+                        <div className="px-5 pb-4">
+                          <div className="flex gap-2 mb-3 mt-1">
+                            <button
+                              onClick={() => setDetailMode("close")}
+                              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                                detailMode === "close"
+                                  ? "bg-gray-900 text-white"
+                                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                              }`}
+                            >
+                              Closest rankings
+                            </button>
+                            <button
+                              onClick={() => setDetailMode("far")}
+                              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                                detailMode === "far"
+                                  ? "bg-gray-900 text-white"
+                                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                              }`}
+                            >
+                              Biggest gaps
+                            </button>
+                          </div>
+                          <DetailList entries={comp.rankings} mode={detailMode} theirName={comp.name} />
+                        </div>
+                      )}
                     </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+                  )
+                })}
+              </ul>
+            </div>
           </div>
         )}
       </div>
