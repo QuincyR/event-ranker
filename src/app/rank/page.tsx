@@ -5,26 +5,17 @@ import Link from "next/link"
 
 type Event = { id: string; name: string; location?: string | null; category?: string | null; description?: string | null }
 
-// Items being actively binary-sorted in parallel. queue[0] is the "current" item shown on the left card.
-// nextMid is stored in state (not derived) so each item compares against a different opponent.
-type PendingSort = { event: Event; lo: number; hi: number; nextMid: number }
-
-function makePending(event: Event, lo: number, hi: number): PendingSort {
-  const nextMid = hi > lo ? lo + Math.floor(Math.random() * (hi - lo)) : lo
-  return { event, lo, hi, nextMid }
-}
-
 interface RankingState {
   phase: "loading" | "ranking" | "done"
   ranked: Event[]
-  queue: PendingSort[]  // up to POOL_SIZE items being sorted simultaneously; rotates after each step
-  toRank: Event[]       // not yet started
+  toRank: Event[]
+  current: Event | null
+  lo: number
+  hi: number
   skipped: Event[]
 }
 
 type User = { id: string; name: string }
-
-const POOL_SIZE = 10
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
@@ -40,8 +31,10 @@ export default function RankPage() {
   const [state, setState] = useState<RankingState>({
     phase: "loading",
     ranked: [],
-    queue: [],
     toRank: [],
+    current: null,
+    lo: 0,
+    hi: 0,
     skipped: [],
   })
   const [history, setHistory] = useState<RankingState[]>([])
@@ -81,7 +74,7 @@ export default function RankPage() {
         const shuffled = shuffle(unranked)
 
         if (shuffled.length === 0) {
-          setState({ phase: "done", ranked, queue: [], toRank: [], skipped })
+          setState({ phase: "done", ranked, toRank: [], current: null, lo: 0, hi: 0, skipped })
           return
         }
 
@@ -89,22 +82,17 @@ export default function RankPage() {
           if (shuffled.length === 1) {
             const newRanked = [shuffled[0]]
             saveProgress(u.id, newRanked, skipped)
-            setState({ phase: "done", ranked: newRanked, queue: [], toRank: [], skipped })
+            setState({ phase: "done", ranked: newRanked, toRank: [], current: null, lo: 0, hi: 0, skipped })
             return
           }
-          // Seed one item into ranked so the first pool has opponents to compare against
-          const [seed, ...rest] = shuffled
-          const poolItems = rest.slice(0, POOL_SIZE)
-          const toRank = rest.slice(POOL_SIZE)
-          const queue = poolItems.map((e) => makePending(e, 0, 1))
-          setState({ phase: "ranking", ranked: [seed], queue, toRank, skipped })
+          // Seed second item so first comparison always shows two cards
+          const [first, second, ...rest] = shuffled
+          setState({ phase: "ranking", ranked: [second], toRank: rest, current: first, lo: 0, hi: 1, skipped })
           return
         }
 
-        const poolItems = shuffled.slice(0, POOL_SIZE)
-        const toRank = shuffled.slice(POOL_SIZE)
-        const queue = poolItems.map((e) => makePending(e, 0, ranked.length))
-        setState({ phase: "ranking", ranked, queue, toRank, skipped })
+        const [current, ...rest] = shuffled
+        setState({ phase: "ranking", ranked, toRank: rest, current, lo: 0, hi: ranked.length, skipped })
       })
       .catch(() => {
         localStorage.removeItem("user")
@@ -114,7 +102,7 @@ export default function RankPage() {
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (state.phase !== "ranking" || flash || !state.queue.length) return
+      if (state.phase !== "ranking" || flash || !state.current) return
       if (e.key === "ArrowLeft") handleButtonClick(true)
       if (e.key === "ArrowRight") handleButtonClick(false)
     }
@@ -134,68 +122,54 @@ export default function RankPage() {
   }
 
   function handleChoice(preferCurrent: boolean) {
-    if (state.phase !== "ranking" || !state.queue.length || !user) return
+    if (state.phase !== "ranking" || !state.current || !user) return
 
     setHistory((h) => [...h, state])
 
-    const [head, ...restQueue] = state.queue
-    const { ranked, toRank, skipped } = state
-    const mid = head.nextMid
-    const newLo = preferCurrent ? head.lo : mid + 1
-    const newHi = preferCurrent ? mid : head.hi
+    const { ranked, current, toRank, lo, hi, skipped } = state
+    const mid = Math.floor((lo + hi) / 2)
+    const newLo = preferCurrent ? lo : mid + 1
+    const newHi = preferCurrent ? mid : hi
 
     if (newLo >= newHi) {
-      // Place this item into ranked
-      const newRanked = [...ranked.slice(0, newLo), head.event, ...ranked.slice(newLo)]
+      const newRanked = [...ranked.slice(0, newLo), current, ...ranked.slice(newLo)]
       saveProgress(user.id, newRanked, skipped)
 
-      // Reset remaining queue items' ranges (ranked changed) with fresh random midpoints
-      const resetQueue = restQueue.map((p) => makePending(p.event, 0, newRanked.length))
-      const newItem = toRank.length > 0 ? makePending(toRank[0], 0, newRanked.length) : null
-      const finalQueue = newItem ? [...resetQueue, newItem] : resetQueue
-      const remainingToRank = toRank.slice(1)
-
-      if (finalQueue.length === 0) {
-        setState({ phase: "done", ranked: newRanked, queue: [], toRank: [], skipped })
+      if (toRank.length === 0) {
+        setState({ phase: "done", ranked: newRanked, toRank: [], current: null, lo: 0, hi: 0, skipped })
         return
       }
 
-      setState({ phase: "ranking", ranked: newRanked, queue: finalQueue, toRank: remainingToRank, skipped })
+      const [next, ...remaining] = toRank
+      setState({ phase: "ranking", ranked: newRanked, toRank: remaining, current: next, lo: 0, hi: newRanked.length, skipped })
       return
     }
 
-    // Not placed yet — pick a new random comparison point in the narrowed range, rotate to back
-    const updatedHead: PendingSort = makePending(head.event, newLo, newHi)
-    setState({ ...state, queue: [...restQueue, updatedHead] })
+    setState({ ...state, lo: newLo, hi: newHi })
   }
 
   function handleSkipCurrent() {
-    if (state.phase !== "ranking" || !state.queue.length || !user || flash) return
+    if (state.phase !== "ranking" || !state.current || !user || flash) return
 
     setHistory((h) => [...h, state])
 
-    const [head, ...restQueue] = state.queue
-    const newSkipped = [...state.skipped, head.event]
-    const newItem = state.toRank.length > 0 ? makePending(state.toRank[0], 0, state.ranked.length) : null
-    const finalQueue = newItem ? [...restQueue, newItem] : restQueue
-    const remainingToRank = state.toRank.slice(1)
-
+    const newSkipped = [...state.skipped, state.current]
     saveProgress(user.id, state.ranked, newSkipped)
 
-    if (finalQueue.length === 0) {
-      setState({ phase: "done", ranked: state.ranked, queue: [], toRank: [], skipped: newSkipped })
+    if (state.toRank.length === 0) {
+      setState({ ...state, phase: "done", toRank: [], current: null, lo: 0, hi: 0, skipped: newSkipped })
       return
     }
 
-    setState({ ...state, queue: finalQueue, toRank: remainingToRank, skipped: newSkipped })
+    const [next, ...remaining] = state.toRank
+    setState({ ...state, toRank: remaining, current: next, lo: 0, hi: state.ranked.length, skipped: newSkipped })
   }
 
   function handleSkipOpponent() {
-    if (state.phase !== "ranking" || !state.queue.length || !user || flash) return
+    if (state.phase !== "ranking" || !state.current || !user || flash) return
 
-    const head = state.queue[0]
     const { ranked, skipped } = state
-    const mid = Math.floor((head.lo + head.hi) / 2)
+    const mid = Math.floor((state.lo + state.hi) / 2)
     const opponent = ranked[mid]
     if (!opponent) return
 
@@ -205,25 +179,19 @@ export default function RankPage() {
     const newSkipped = [...skipped, opponent]
 
     if (newRanked.length === 0) {
-      // All opponents skipped; place current as sole ranked item
-      const [, ...restQueue] = state.queue
-      const finalRanked = [head.event]
-      const resetQueue = restQueue.map((p) => makePending(p.event, 0, 1))
-      const newItem = state.toRank.length > 0 ? makePending(state.toRank[0], 0, 1) : null
-      const finalQueue = newItem ? [...resetQueue, newItem] : resetQueue
+      const finalRanked = [state.current!]
       saveProgress(user.id, finalRanked, newSkipped)
-      if (finalQueue.length === 0) {
-        setState({ phase: "done", ranked: finalRanked, queue: [], toRank: state.toRank.slice(1), skipped: newSkipped })
+      if (state.toRank.length === 0) {
+        setState({ phase: "done", ranked: finalRanked, toRank: [], current: null, lo: 0, hi: 0, skipped: newSkipped })
       } else {
-        setState({ phase: "ranking", ranked: finalRanked, queue: finalQueue, toRank: state.toRank.slice(1), skipped: newSkipped })
+        const [next, ...remaining] = state.toRank
+        setState({ phase: "ranking", ranked: finalRanked, toRank: remaining, current: next, lo: 0, hi: 1, skipped: newSkipped })
       }
       return
     }
 
-    // Reset all queue items' ranges since ranked changed, with fresh random midpoints
-    const newQueue = state.queue.map((p) => makePending(p.event, 0, newRanked.length))
     saveProgress(user.id, newRanked, newSkipped)
-    setState({ ...state, ranked: newRanked, queue: newQueue, skipped: newSkipped })
+    setState({ ...state, ranked: newRanked, lo: 0, hi: newRanked.length, skipped: newSkipped })
   }
 
   function handleRerank(event: Event) {
@@ -231,15 +199,17 @@ export default function RankPage() {
     const newRanked = state.ranked.filter((e) => e.id !== event.id)
     if (newRanked.length === 0) {
       saveProgress(user.id, [event], state.skipped)
-      setState({ phase: "done", ranked: [event], queue: [], toRank: [], skipped: state.skipped })
+      setState({ phase: "done", ranked: [event], toRank: [], current: null, lo: 0, hi: 0, skipped: state.skipped })
       return
     }
     saveProgress(user.id, newRanked, state.skipped)
     setState({
       phase: "ranking",
       ranked: newRanked,
-      queue: [makePending(event, 0, newRanked.length)],
       toRank: [],
+      current: event,
+      lo: 0,
+      hi: newRanked.length,
       skipped: state.skipped,
     })
   }
@@ -328,12 +298,12 @@ export default function RankPage() {
   }
 
   // Ranking phase
-  const head = state.queue[0]
-  const current = head?.event ?? null
-  const opponent = head != null ? state.ranked[head.nextMid] : undefined
-  const totalUnranked = state.queue.length + state.toRank.length
-  const totalEvents = state.ranked.length + totalUnranked + state.skipped.length
-  const progress = state.ranked.length + state.skipped.length
+  const { ranked, current, lo, hi } = state
+  const mid = Math.floor((lo + hi) / 2)
+  const opponent = ranked[mid]
+  const totalUnranked = state.toRank.length + 1
+  const totalEvents = ranked.length + totalUnranked + state.skipped.length
+  const progress = ranked.length + state.skipped.length
 
   return (
     <div className="min-h-screen bg-gray-50">
