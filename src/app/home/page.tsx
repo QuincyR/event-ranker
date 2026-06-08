@@ -70,6 +70,12 @@ export default function HomePage() {
             >
               View Rankings
             </Link>
+            <Link
+              href="/compare"
+              className="px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+            >
+              Compare with Others
+            </Link>
           </div>
         </div>
 
