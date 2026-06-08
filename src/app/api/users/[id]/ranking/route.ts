@@ -10,15 +10,21 @@ export async function GET(
   if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
   const ranked: string[] = JSON.parse(user.rankedEvents)
+  const skipped: string[] = JSON.parse(user.skippedEvents)
   const allEvents = await prisma.event.findMany({ orderBy: { createdAt: "asc" } })
 
   const rankedEvents = ranked
     .map((eid) => allEvents.find((e) => e.id === eid))
     .filter(Boolean)
 
-  const unranked = allEvents.filter((e) => !ranked.includes(e.id))
+  const skippedEvents = skipped
+    .map((eid) => allEvents.find((e) => e.id === eid))
+    .filter(Boolean)
 
-  return NextResponse.json({ ranked: rankedEvents, unranked })
+  const excluded = new Set([...ranked, ...skipped])
+  const unranked = allEvents.filter((e) => !excluded.has(e.id))
+
+  return NextResponse.json({ ranked: rankedEvents, unranked, skipped: skippedEvents })
 }
 
 export async function PUT(
@@ -26,10 +32,13 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const { rankedEvents } = await req.json()
+  const { rankedEvents, skippedEvents } = await req.json()
+  const updateData: Record<string, string> = {}
+  if (rankedEvents !== undefined) updateData.rankedEvents = JSON.stringify(rankedEvents)
+  if (skippedEvents !== undefined) updateData.skippedEvents = JSON.stringify(skippedEvents)
   const user = await prisma.user.update({
     where: { id },
-    data: { rankedEvents: JSON.stringify(rankedEvents) },
+    data: updateData,
   })
   return NextResponse.json(user)
 }

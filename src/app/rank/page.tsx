@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import Link from "next/link"
 
 type Event = { id: string; name: string; location?: string | null; category?: string | null; description?: string | null }
@@ -12,6 +12,7 @@ interface RankingState {
   current: Event | null
   lo: number
   hi: number
+  skipped: Event[]
 }
 
 type User = { id: string; name: string }
@@ -25,16 +26,21 @@ export default function RankPage() {
     current: null,
     lo: 0,
     hi: 0,
+    skipped: [],
   })
   const [history, setHistory] = useState<RankingState[]>([])
   const [flash, setFlash] = useState<"current" | "opponent" | null>(null)
   const [cardVisible, setCardVisible] = useState(true)
+  const touchStartX = useRef<number | null>(null)
 
-  const saveRanking = useCallback(async (userId: string, ranked: Event[]) => {
+  const saveProgress = useCallback(async (userId: string, ranked: Event[], skipped: Event[]) => {
     await fetch(`/api/users/${userId}/ranking`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rankedEvents: ranked.map((e) => e.id) }),
+      body: JSON.stringify({
+        rankedEvents: ranked.map((e) => e.id),
+        skippedEvents: skipped.map((e) => e.id),
+      }),
     })
   }, [])
 
@@ -55,26 +61,30 @@ export default function RankPage() {
       })
       .then((data) => {
         if (!data) return
-        const { ranked, unranked } = data as { ranked: Event[]; unranked: Event[] }
+        const { ranked, unranked, skipped = [] } = data as { ranked: Event[]; unranked: Event[]; skipped: Event[] }
         if (unranked.length === 0) {
-          setState({ phase: "done", ranked, toRank: [], current: null, lo: 0, hi: 0 })
+          setState({ phase: "done", ranked, toRank: [], current: null, lo: 0, hi: 0, skipped })
           return
         }
         const [current, ...rest] = unranked
-        setState({
-          phase: "ranking",
-          ranked,
-          toRank: rest,
-          current,
-          lo: 0,
-          hi: ranked.length,
-        })
+        setState({ phase: "ranking", ranked, toRank: rest, current, lo: 0, hi: ranked.length, skipped })
       })
       .catch(() => {
         localStorage.removeItem("user")
         window.location.href = "/"
       })
   }, [])
+
+  // Keyboard arrow navigation
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (state.phase !== "ranking" || flash || !state.current) return
+      if (e.key === "ArrowLeft") handleButtonClick(true)
+      if (e.key === "ArrowRight") handleButtonClick(false)
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [state, flash]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleButtonClick(preferCurrent: boolean) {
     if (flash) return
@@ -92,7 +102,7 @@ export default function RankPage() {
 
     setHistory((h) => [...h, state])
 
-    const { ranked, current, toRank, lo, hi } = state
+    const { ranked, current, toRank, lo, hi, skipped } = state
     const mid = Math.floor((lo + hi) / 2)
 
     let newLo = lo
@@ -105,41 +115,47 @@ export default function RankPage() {
     }
 
     if (newLo >= newHi) {
-      const newRanked = [
-        ...ranked.slice(0, newLo),
-        current,
-        ...ranked.slice(newLo),
-      ]
-
-      saveRanking(user.id, newRanked)
+      const newRanked = [...ranked.slice(0, newLo), current, ...ranked.slice(newLo)]
+      saveProgress(user.id, newRanked, skipped)
 
       if (toRank.length === 0) {
-        setState({ phase: "done", ranked: newRanked, toRank: [], current: null, lo: 0, hi: 0 })
+        setState({ phase: "done", ranked: newRanked, toRank: [], current: null, lo: 0, hi: 0, skipped })
         return
       }
 
       const [next, ...remaining] = toRank
-      setState({
-        phase: "ranking",
-        ranked: newRanked,
-        toRank: remaining,
-        current: next,
-        lo: 0,
-        hi: newRanked.length,
-      })
+      setState({ phase: "ranking", ranked: newRanked, toRank: remaining, current: next, lo: 0, hi: newRanked.length, skipped })
       return
     }
 
     setState({ ...state, lo: newLo, hi: newHi })
   }
 
+  function handleSkip() {
+    if (state.phase !== "ranking" || !state.current || !user || flash) return
+
+    setHistory((h) => [...h, state])
+
+    const newSkipped = [...state.skipped, state.current]
+    saveProgress(user.id, state.ranked, newSkipped)
+
+    if (state.toRank.length === 0) {
+      setState({ ...state, phase: "done", toRank: [], current: null, lo: 0, hi: 0, skipped: newSkipped })
+      return
+    }
+
+    const [next, ...remaining] = state.toRank
+    setState({ ...state, toRank: remaining, current: next, lo: 0, hi: state.ranked.length, skipped: newSkipped })
+  }
+
   function handleUndo() {
     if (history.length === 0) return
     const prev = history[history.length - 1]
 
-    // If undoing a placement, roll back the DB too
-    if (user && prev.ranked.length < state.ranked.length) {
-      saveRanking(user.id, prev.ranked)
+    const rankChanged = prev.ranked.length !== state.ranked.length
+    const skipChanged = prev.skipped.length !== state.skipped.length
+    if (user && (rankChanged || skipChanged)) {
+      saveProgress(user.id, prev.ranked, prev.skipped)
     }
 
     setHistory((h) => h.slice(0, -1))
@@ -213,8 +229,8 @@ export default function RankPage() {
   const mid = Math.floor((lo + hi) / 2)
   const opponent = ranked[mid]
   const totalUnranked = state.toRank.length + 1
-  const totalEvents = ranked.length + totalUnranked
-  const progress = totalEvents - totalUnranked
+  const totalEvents = ranked.length + totalUnranked + state.skipped.length
+  const progress = ranked.length + state.skipped.length
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -255,6 +271,15 @@ export default function RankPage() {
             transition: cardVisible
               ? "opacity 0.35s ease-out, transform 0.35s ease-out"
               : "opacity 0.25s ease-in, transform 0.25s ease-in",
+          }}
+          onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX }}
+          onTouchEnd={(e) => {
+            if (touchStartX.current === null || !!flash) return
+            const deltaX = e.changedTouches[0].clientX - touchStartX.current
+            touchStartX.current = null
+            if (Math.abs(deltaX) < 50) return
+            // swipe left = prefer left card, swipe right = prefer right card
+            handleButtonClick(deltaX < 0)
           }}
         >
           {ranked.length === 0 || !opponent ? (
@@ -322,9 +347,19 @@ export default function RankPage() {
           )}
         </div>
 
-        <p className="text-center text-sm text-gray-400 mt-6">
-          {totalUnranked} experience{totalUnranked !== 1 ? "s" : ""} left to rank
-        </p>
+        <div className="mt-6 flex flex-col items-center gap-3">
+          <p className="text-xs text-gray-300">← → arrow keys · swipe on mobile</p>
+          <button
+            onClick={handleSkip}
+            disabled={!!flash}
+            className="text-xs text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors underline underline-offset-2"
+          >
+            Not my experience
+          </button>
+          <p className="text-sm text-gray-400">
+            {totalUnranked} experience{totalUnranked !== 1 ? "s" : ""} left to rank
+          </p>
+        </div>
       </div>
     </div>
   )

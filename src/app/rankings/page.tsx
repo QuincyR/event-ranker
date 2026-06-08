@@ -266,7 +266,16 @@ export default function RankingsPage() {
         {tab === "chronological" && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="font-semibold text-gray-900 mb-1">Year in Review</h2>
-            <p className="text-xs text-gray-400 mb-5">Tap a date field to pin an experience to the timeline.</p>
+            {chronoNoDate.length > 0 && (
+              <div className="mt-3 mb-5 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                <p className="text-sm font-medium text-amber-800">
+                  {chronoNoDate.length} experience{chronoNoDate.length !== 1 ? "s" : ""} need{chronoNoDate.length === 1 ? "s" : ""} a date
+                </p>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  Use the date fields on the right to place them in the timeline — they&apos;ll move up automatically.
+                </p>
+              </div>
+            )}
             {allRankings.length === 0 ? (
               <p className="text-gray-400 text-sm text-center py-6">No experiences added yet.</p>
             ) : (
@@ -300,9 +309,9 @@ export default function RankingsPage() {
 
                 {chronoNoDate.length > 0 && (
                   <>
-                    {chronoWithDate.length > 0 && (
-                      <p className="text-xs font-medium text-gray-400 mt-6 mb-2">No date — ordered by season</p>
-                    )}
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-6 mb-2">
+                      {chronoWithDate.length > 0 ? "No date yet — click to add" : "No dates set yet — click to add"}
+                    </p>
                     <ul className="divide-y divide-gray-50">
                       {chronoNoDate.map((item) => {
                         const meta = [item.event.category, item.event.location].filter(Boolean).join(" · ")
@@ -317,9 +326,9 @@ export default function RankingsPage() {
                               {item.rank != null && <span className="text-xs text-gray-400">#{item.rank} overall</span>}
                               <input
                                 type="date"
-                                value={item.event.date ? item.event.date.substring(0, 10) : ""}
+                                value=""
                                 onChange={(e) => handleSetDate(item.event.id, e.target.value)}
-                                className="text-xs border border-gray-200 rounded px-1.5 py-1 text-gray-500 focus:outline-none focus:ring-1 focus:ring-black bg-white"
+                                className="text-xs border-2 border-dashed border-amber-300 rounded px-1.5 py-1 text-gray-400 focus:outline-none focus:ring-1 focus:ring-amber-400 focus:border-amber-400 bg-amber-50 cursor-pointer"
                               />
                             </div>
                           </li>
