@@ -312,7 +312,7 @@ export default function RankPage() {
                   </p>
                 )}
                 {current?.description && (
-                  <p className="text-xs text-gray-400 mt-1 italic">{current.description}</p>
+                  <p className="text-xs text-gray-400 mt-1 italic line-clamp-2">{current.description}</p>
                 )}
                 <p className="text-sm text-gray-400 mt-2">Tap to confirm first ranking</p>
               </button>
@@ -344,7 +344,7 @@ export default function RankPage() {
                     </p>
                   )}
                   {current?.description && (
-                    <p className="text-xs text-gray-400 mt-1 italic">{current.description}</p>
+                    <p className="text-xs text-gray-400 mt-1 italic line-clamp-2">{current.description}</p>
                   )}
                 </button>
                 <button
@@ -373,7 +373,7 @@ export default function RankPage() {
                     </p>
                   )}
                   {opponent.description && (
-                    <p className="text-xs text-gray-400 mt-1 italic">{opponent.description}</p>
+                    <p className="text-xs text-gray-400 mt-1 italic line-clamp-2">{opponent.description}</p>
                   )}
                 </button>
                 <button
