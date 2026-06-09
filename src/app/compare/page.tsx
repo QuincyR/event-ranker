@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { MonsterAvatar } from "@/components/MonsterAvatar"
 
 type EventData = {
   id: string
@@ -26,7 +27,7 @@ type Comparison = {
   rankings: RankingEntry[]
 }
 
-type User = { id: string; name: string }
+type User = { id: string; name: string; character?: string; equipped?: string[] }
 
 function SimilarityBar({ pct }: { pct: number }) {
   const color = pct >= 65 ? "#22c55e" : pct >= 40 ? "#f59e0b" : "#ef4444"
@@ -93,12 +94,14 @@ function ComparisonCard({
   mode,
   expanded,
   onToggle,
+  avatarUser,
 }: {
   comp: Comparison
   headline: string
   mode: "close" | "far"
   expanded: boolean
   onToggle: () => void
+  avatarUser?: { character?: string; equipped?: string[] }
 }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -107,7 +110,12 @@ function ComparisonCard({
         className="w-full text-left p-5 hover:bg-gray-50 transition-colors"
       >
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{headline}</p>
-        <p className="text-lg font-bold text-gray-900">{comp.name}</p>
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+            <MonsterAvatar character={avatarUser?.character ?? "blob"} equipped={avatarUser?.equipped ?? []} size={40} />
+          </div>
+          <p className="text-lg font-bold text-gray-900">{comp.name}</p>
+        </div>
         <SimilarityBar pct={comp.similarity} />
         <p className="text-xs text-gray-400 mt-1.5">{comp.sharedCount} experiences in common</p>
         <p className="text-xs text-gray-400 mt-2">
@@ -130,6 +138,7 @@ function ComparisonCard({
 export default function ComparePage() {
   const [user, setUser] = useState<User | null>(null)
   const [comparisons, setComparisons] = useState<Comparison[]>([])
+  const [userMap, setUserMap] = useState<Record<string, User>>({})
   const [loading, setLoading] = useState(true)
   const [expandedMost, setExpandedMost] = useState(false)
   const [expandedLeast, setExpandedLeast] = useState(false)
@@ -143,10 +152,15 @@ export default function ComparePage() {
     const u: User = JSON.parse(stored)
     setUser(u)
 
-    fetch(`/api/users/${u.id}/compare`)
-      .then((r) => r.json())
-      .then((data: Comparison[]) => {
-        setComparisons(data)
+    Promise.all([
+      fetch(`/api/users/${u.id}/compare`).then((r) => r.json()),
+      fetch("/api/users").then((r) => r.json()),
+    ])
+      .then(([compareData, usersData]: [Comparison[], User[]]) => {
+        setComparisons(compareData)
+        const map: Record<string, User> = {}
+        for (const usr of usersData) map[usr.id] = usr
+        setUserMap(map)
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -188,6 +202,7 @@ export default function ComparePage() {
                 mode="close"
                 expanded={expandedMost}
                 onToggle={() => setExpandedMost((v) => !v)}
+                avatarUser={userMap[most.userId]}
               />
             )}
 
@@ -198,6 +213,7 @@ export default function ComparePage() {
                 mode="far"
                 expanded={expandedLeast}
                 onToggle={() => setExpandedLeast((v) => !v)}
+                avatarUser={userMap[least.userId]}
               />
             )}
 
@@ -216,7 +232,16 @@ export default function ComparePage() {
                         className="w-full text-left px-5 py-3 hover:bg-gray-50 transition-colors"
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium text-gray-800">{comp.name}</span>
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                              <MonsterAvatar
+                                character={userMap[comp.userId]?.character ?? "blob"}
+                                equipped={userMap[comp.userId]?.equipped ?? []}
+                                size={32}
+                              />
+                            </div>
+                            <span className="text-sm font-medium text-gray-800">{comp.name}</span>
+                          </div>
                           <span className="text-xs text-gray-400">
                             {comp.sharedCount} shared · {isSelected ? "▲" : "▼"}
                           </span>

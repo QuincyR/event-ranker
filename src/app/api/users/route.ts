@@ -3,10 +3,17 @@ import { NextResponse } from "next/server"
 
 export async function GET() {
   const users = await prisma.user.findMany({
-    select: { id: true, name: true },
+    select: { id: true, name: true, character: true, equipped: true },
     orderBy: { name: "asc" },
   })
-  return NextResponse.json(users)
+  return NextResponse.json(
+    users.map((u) => ({
+      id: u.id,
+      name: u.name,
+      character: u.character || "blob",
+      equipped: (() => { try { return JSON.parse(u.equipped) as string[] } catch { return [] } })(),
+    }))
+  )
 }
 
 function serializeUser(user: {

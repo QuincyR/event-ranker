@@ -87,9 +87,36 @@ export function Header() {
       }, tick)
     }
 
+    function handleCoinSpend(e: Event) {
+      const { newTotal } = (e as CustomEvent<{ newTotal: number }>).detail
+      const startVal = displayedRef.current
+      if (countIntervalRef.current) clearInterval(countIntervalRef.current)
+      if (startVal <= newTotal) {
+        displayedRef.current = newTotal
+        setDisplayedCoins(newTotal)
+        return
+      }
+      let current = startVal
+      const diff = startVal - newTotal
+      const tick = Math.max(25, 500 / diff)
+      countIntervalRef.current = setInterval(() => {
+        current -= 1
+        displayedRef.current = current
+        setDisplayedCoins(current)
+        if (current <= newTotal) {
+          clearInterval(countIntervalRef.current!)
+          countIntervalRef.current = null
+          setBump(true)
+          setTimeout(() => setBump(false), 300)
+        }
+      }, tick)
+    }
+
     window.addEventListener("coinGain", handleCoinGain)
+    window.addEventListener("coinSpend", handleCoinSpend)
     return () => {
       window.removeEventListener("coinGain", handleCoinGain)
+      window.removeEventListener("coinSpend", handleCoinSpend)
       if (countIntervalRef.current) clearInterval(countIntervalRef.current)
     }
   }, [])

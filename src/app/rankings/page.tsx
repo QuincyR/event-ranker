@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { CATEGORIES, NAMES, CATEGORY_SEASON_ORDER } from "@/lib/constants"
+import { MonsterAvatar } from "@/components/MonsterAvatar"
 
 type EventData = {
   id: string
@@ -23,7 +24,7 @@ type RankedItem = {
   rank: number | null
 }
 
-type User = { id: string; name: string }
+type User = { id: string; name: string; character?: string; equipped?: string[] }
 type Tab = "overall" | "mine" | "person" | "chronological" | "category"
 
 function EventRow({ rank, event, extra }: { rank?: number | null; event: EventData; extra?: string }) {
@@ -234,9 +235,19 @@ export default function RankingsPage() {
 
             {!personLoading && personRanking !== null && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h2 className="font-semibold text-gray-900 mb-5">
-                  {selectedPerson}&apos;s Ranking
-                </h2>
+                <div className="flex items-center gap-3 mb-5">
+                  {(() => {
+                    const p = allUsers.find((u) => u.name === selectedPerson)
+                    return p ? (
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                        <MonsterAvatar character={p.character ?? "blob"} equipped={p.equipped ?? []} size={40} />
+                      </div>
+                    ) : null
+                  })()}
+                  <h2 className="font-semibold text-gray-900">
+                    {selectedPerson}&apos;s Ranking
+                  </h2>
+                </div>
                 {personRanking.length === 0 ? (
                   <p className="text-gray-400 text-sm text-center py-6">
                     {allUsers.find((u) => u.name === selectedPerson)
