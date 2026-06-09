@@ -50,41 +50,48 @@ function DetailList({ entries, mode, theirName }: { entries: RankingEntry[]; mod
   const sorted = [...entries].sort((a, b) =>
     mode === "close" ? a.diff - b.diff : b.diff - a.diff
   )
+  const shortName = theirName.split(" ")[0]
 
   return (
-    <ul className="mt-4 space-y-2">
-      {sorted.map(({ event, myRank, theirRank, diff }) => {
-        const meta = [event.category, event.location].filter(Boolean).join(" · ")
-        const isClose = diff <= 2
-        const isFar = diff >= Math.ceil(entries.length * 0.4)
-        return (
-          <li
-            key={event.id}
-            className="flex items-start justify-between gap-4 py-2.5 border-b border-gray-50 last:border-0"
-          >
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-800 leading-snug">{event.name}</p>
-              {meta && <p className="text-xs text-gray-400 mt-0.5">{meta}</p>}
-            </div>
-            <div className="shrink-0 text-right">
-              <p className="text-xs text-gray-500">
-                You <span className="font-semibold text-gray-700">#{myRank}</span>
-                {"  ·  "}
-                {theirName} <span className="font-semibold text-gray-700">#{theirRank}</span>
-              </p>
-              <p
-                className="text-xs mt-0.5"
-                style={{
-                  color: mode === "close" && isClose ? "#22c55e" : mode === "far" && isFar ? "#ef4444" : "#9ca3af",
-                }}
-              >
-                {diff === 0 ? "exact match" : `${diff} apart`}
-              </p>
-            </div>
-          </li>
-        )
-      })}
-    </ul>
+    <>
+      <div className="flex items-center justify-between pb-1.5 mb-1 border-b border-gray-100">
+        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Experience</span>
+        <div className="flex gap-6 text-xs font-semibold text-gray-400 uppercase tracking-wide shrink-0">
+          <span className="w-10 text-right">You</span>
+          <span className="w-14 text-right">{shortName}</span>
+        </div>
+      </div>
+      <ul className="divide-y divide-gray-50">
+        {sorted.map(({ event, myRank, theirRank, diff }) => {
+          const meta = [event.category, event.location].filter(Boolean).join(" · ")
+          const isClose = diff <= 2
+          const isFar = diff >= Math.ceil(entries.length * 0.4)
+          return (
+            <li
+              key={event.id}
+              className="flex items-start justify-between gap-4 py-2.5"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-gray-800 leading-snug">{event.name}</p>
+                {meta && <p className="text-xs text-gray-400 mt-0.5">{meta}</p>}
+                <p
+                  className="text-xs mt-0.5"
+                  style={{
+                    color: isClose ? "#22c55e" : isFar ? "#ef4444" : "#d1d5db",
+                  }}
+                >
+                  {diff === 0 ? "exact match" : `${diff} apart`}
+                </p>
+              </div>
+              <div className="flex gap-6 shrink-0 pt-0.5">
+                <span className="w-10 text-right text-sm font-bold text-gray-700">#{myRank}</span>
+                <span className="w-14 text-right text-sm font-semibold text-gray-400">#{theirRank}</span>
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+    </>
   )
 }
 
@@ -140,8 +147,8 @@ export default function ComparePage() {
   const [comparisons, setComparisons] = useState<Comparison[]>([])
   const [userMap, setUserMap] = useState<Record<string, User>>({})
   const [loading, setLoading] = useState(true)
-  const [expandedMost, setExpandedMost] = useState(false)
-  const [expandedLeast, setExpandedLeast] = useState(false)
+  const [expandedMost, setExpandedMost] = useState(true)
+  const [expandedLeast, setExpandedLeast] = useState(true)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detailMode, setDetailMode] = useState<"close" | "far">("close")
   const router = useRouter()

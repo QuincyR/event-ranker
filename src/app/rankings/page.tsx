@@ -280,11 +280,47 @@ export default function RankingsPage() {
                   </p>
                 ) : (
                   <>
-                    <ol className="space-y-4">
-                      {personRanking.map((event, i) => (
-                        <EventRow key={event.id} rank={i + 1} event={event} />
-                      ))}
-                    </ol>
+                    {/* Column headers */}
+                    <div className="flex items-center justify-between pb-2 mb-1 border-b border-gray-100">
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Experience</span>
+                      <div className="flex gap-6 text-xs font-semibold text-gray-400 uppercase tracking-wide shrink-0">
+                        <span className="w-14 text-right">{selectedPerson.split(" ")[0]}</span>
+                        <span className="w-10 text-right">You</span>
+                      </div>
+                    </div>
+                    {(() => {
+                      const myRankMap = new Map(myRanking.map((e, i) => [e.id, i + 1]))
+                      return (
+                        <ul className="divide-y divide-gray-50">
+                          {personRanking.map((event, i) => {
+                            const theirRank = i + 1
+                            const myRank = myRankMap.get(event.id)
+                            const diff = myRank != null ? Math.abs(myRank - theirRank) : null
+                            const meta = [event.category, event.location].filter(Boolean).join(" · ")
+                            return (
+                              <li key={event.id} className="flex items-start justify-between gap-4 py-2.5">
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-medium text-gray-800 leading-snug">{event.name}</p>
+                                  {meta && <p className="text-xs text-gray-400 mt-0.5">{meta}</p>}
+                                  {diff != null && diff > 0 && (
+                                    <p className="text-xs text-gray-300 mt-0.5">{diff} apart</p>
+                                  )}
+                                  {diff === 0 && (
+                                    <p className="text-xs text-green-500 mt-0.5">exact match</p>
+                                  )}
+                                </div>
+                                <div className="flex gap-6 shrink-0 pt-0.5">
+                                  <span className="w-14 text-right text-sm font-bold text-gray-700">#{theirRank}</span>
+                                  <span className="w-10 text-right text-sm font-semibold text-gray-400">
+                                    {myRank != null ? `#${myRank}` : "—"}
+                                  </span>
+                                </div>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      )
+                    })()}
                     {allRankings.length > personRanking.length && (
                       <p className="text-xs text-gray-400 text-center pt-4 mt-4 border-t border-gray-50">
                         Missing {allRankings.length - personRanking.length} experience{allRankings.length - personRanking.length !== 1 ? "s" : ""} from their ranking
