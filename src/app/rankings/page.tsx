@@ -263,14 +263,17 @@ export default function RankingsPage() {
                   {(() => {
                     const p = allUsers.find((u) => u.name === selectedPerson)
                     return p ? (
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
-                        <MonsterAvatar character={p.character ?? "blob"} equipped={p.equipped ?? []} size={40} />
-                      </div>
-                    ) : null
+                      <>
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                          <MonsterAvatar character={p.character ?? "blob"} equipped={p.equipped ?? []} size={40} />
+                        </div>
+                        <div>
+                          <h2 className="font-semibold text-gray-900">{selectedPerson}&apos;s Ranking</h2>
+                          <div className="mt-0.5"><TierBadge ranked={p.rankedCount ?? 0} /></div>
+                        </div>
+                      </>
+                    ) : <h2 className="font-semibold text-gray-900">{selectedPerson}&apos;s Ranking</h2>
                   })()}
-                  <h2 className="font-semibold text-gray-900">
-                    {selectedPerson}&apos;s Ranking
-                  </h2>
                 </div>
                 {personRanking.length === 0 ? (
                   <p className="text-gray-400 text-sm text-center py-6">

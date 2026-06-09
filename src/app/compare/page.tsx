@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { MonsterAvatar } from "@/components/MonsterAvatar"
+import { TierBadge } from "@/components/TierBadge"
 
 type EventData = {
   id: string
@@ -27,7 +28,7 @@ type Comparison = {
   rankings: RankingEntry[]
 }
 
-type User = { id: string; name: string; character?: string; equipped?: string[] }
+type User = { id: string; name: string; character?: string; equipped?: string[]; rankedCount?: number }
 
 function SimilarityBar({ pct }: { pct: number }) {
   const color = pct >= 65 ? "#22c55e" : pct >= 40 ? "#f59e0b" : "#ef4444"
@@ -101,7 +102,7 @@ function ComparisonCard({
   mode: "close" | "far"
   expanded: boolean
   onToggle: () => void
-  avatarUser?: { character?: string; equipped?: string[] }
+  avatarUser?: { character?: string; equipped?: string[]; rankedCount?: number }
 }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -114,7 +115,10 @@ function ComparisonCard({
           <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
             <MonsterAvatar character={avatarUser?.character ?? "blob"} equipped={avatarUser?.equipped ?? []} size={40} />
           </div>
-          <p className="text-lg font-bold text-gray-900">{comp.name}</p>
+          <div>
+            <p className="text-lg font-bold text-gray-900">{comp.name}</p>
+            <div className="mt-0.5"><TierBadge ranked={avatarUser?.rankedCount ?? 0} /></div>
+          </div>
         </div>
         <SimilarityBar pct={comp.similarity} />
         <p className="text-xs text-gray-400 mt-1.5">{comp.sharedCount} experiences in common</p>
@@ -240,7 +244,10 @@ export default function ComparePage() {
                                 size={32}
                               />
                             </div>
-                            <span className="text-sm font-medium text-gray-800">{comp.name}</span>
+                            <div>
+                              <span className="text-sm font-medium text-gray-800">{comp.name}</span>
+                              <div className="mt-0.5"><TierBadge ranked={userMap[comp.userId]?.rankedCount ?? 0} /></div>
+                            </div>
                           </div>
                           <span className="text-xs text-gray-400">
                             {comp.sharedCount} shared · {isSelected ? "▲" : "▼"}
