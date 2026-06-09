@@ -5,8 +5,16 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { TierBadge } from "@/components/TierBadge"
 import { TierModal } from "@/components/TierModal"
+import { MonsterAvatar } from "@/components/MonsterAvatar"
 
-type User = { id: string; name: string; coins?: number }
+type UserLocal = {
+  id: string
+  name: string
+  coins?: number
+  rankedCount?: number
+  character?: string
+  equipped?: string[]
+}
 
 function Row({
   href,
@@ -40,7 +48,7 @@ function Row({
 }
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<UserLocal | null>(null)
   const [rankCount, setRankCount] = useState<{ ranked: number; total: number } | null>(null)
   const [showPasswordChange, setShowPasswordChange] = useState(false)
   const [showTierModal, setShowTierModal] = useState(false)
@@ -49,7 +57,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const stored = localStorage.getItem("user")
     if (!stored) { router.push("/"); return }
-    const u: User = JSON.parse(stored)
+    const u: UserLocal = JSON.parse(stored)
     setUser(u)
 
     fetch(`/api/users/${u.id}/ranking`)
@@ -67,15 +75,22 @@ export default function ProfilePage() {
 
   if (!user) return null
 
+  const rankedCount = user.rankedCount ?? rankCount?.ranked ?? 0
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-10">
 
-        {/* Avatar + name */}
         <div className="flex items-center gap-5 mb-10">
-          <div className="w-16 h-16 rounded-full bg-black text-white flex items-center justify-center text-2xl font-bold shrink-0">
-            {user.name[0].toUpperCase()}
-          </div>
+          <Link href="/customize" className="shrink-0 hover:opacity-80 transition-opacity">
+            <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100">
+              <MonsterAvatar
+                character={user.character ?? "blob"}
+                equipped={user.equipped ?? []}
+                size={64}
+              />
+            </div>
+          </Link>
           <div className="min-w-0">
             <h1 className="text-2xl font-bold text-gray-900">{user.name}</h1>
             {rankCount && (
@@ -83,29 +98,30 @@ export default function ProfilePage() {
                 {rankCount.ranked} of {rankCount.total} experiences ranked
               </p>
             )}
-            {user.coins !== undefined && (
+            <div className="flex items-center gap-2 mt-2">
               <button
                 onClick={() => setShowTierModal(true)}
-                className="mt-2 inline-block cursor-pointer"
+                className="cursor-pointer"
                 title="Click to see tier requirements"
               >
-                <TierBadge coins={user.coins} />
+                <TierBadge ranked={rankedCount} />
               </button>
-            )}
+              <Link
+                href="/customize"
+                className="text-xs text-[#C8102E] font-medium hover:underline"
+              >
+                Customize avatar →
+              </Link>
+            </div>
           </div>
         </div>
 
-        {showTierModal && user.coins !== undefined && (
-          <TierModal coins={user.coins} onClose={() => setShowTierModal(false)} />
+        {showTierModal && (
+          <TierModal ranked={rankedCount} onClose={() => setShowTierModal(false)} />
         )}
 
-        {/* Menu */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-4">
-          <Row
-            href="/rank"
-            label="My Ranking"
-            description="View and continue ranking experiences"
-          />
+          <Row href="/rank" label="My Ranking" description="View and continue ranking experiences" />
           <Row
             onClick={() => setShowPasswordChange((v) => !v)}
             label="Change Password"
@@ -118,24 +134,12 @@ export default function ProfilePage() {
               </p>
             </div>
           )}
-          <Row
-            href="/rankings"
-            label="View Rankings"
-            description="Overall, personal, chronological, and by category"
-          />
-          <Row
-            href="/home"
-            label="All Experiences"
-            description="Browse rankings and add to the shared experience list"
-          />
+          <Row href="/rankings" label="View Rankings" description="Overall, personal, chronological, and by category" />
+          <Row href="/home" label="All Experiences" description="Browse rankings and add to the shared experience list" />
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <Row
-            onClick={handleSignOut}
-            label="Sign Out"
-            danger
-          />
+          <Row onClick={handleSignOut} label="Sign Out" danger />
         </div>
       </div>
     </div>

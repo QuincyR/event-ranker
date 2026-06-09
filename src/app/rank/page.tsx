@@ -277,6 +277,12 @@ export default function RankPage() {
         setCoinNotifKey((k) => k + 1)
         setCoinNotif(5)
         setTimeout(() => setCoinNotif(null), 1800)
+        // Increment rankedCount in localStorage
+        const stored = localStorage.getItem("user")
+        if (stored) {
+          const u = JSON.parse(stored)
+          localStorage.setItem("user", JSON.stringify({ ...u, rankedCount: (u.rankedCount ?? 0) + 1 }))
+        }
       }
 
       if (toRank.length === 0) {

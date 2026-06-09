@@ -1,24 +1,20 @@
 "use client"
 
 import { TIERS, getTier } from "./TierBadge"
-import { CoinIcon } from "./CoinIcon"
 
 interface Props {
-  coins: number
+  ranked: number
   onClose: () => void
 }
 
-export function TierModal({ coins, onClose }: Props) {
-  const currentTier = getTier(coins)
+export function TierModal({ ranked, onClose }: Props) {
+  const currentTier = getTier(ranked)
   const currentIndex = TIERS.findIndex((t) => t.name === currentTier.name)
   const nextTier = currentIndex > 0 ? TIERS[currentIndex - 1] : null
-  const coinsToNext = nextTier ? nextTier.min - coins : 0
+  const toNext = nextTier ? nextTier.min - ranked : 0
 
   return (
-    <div
-      className="fixed inset-0 z-[1000] flex items-center justify-center p-4"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
       <div
         className="relative bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm"
@@ -34,7 +30,7 @@ export function TierModal({ coins, onClose }: Props) {
 
         <h2 className="text-lg font-bold text-gray-900 mb-1 text-center">Tier Status</h2>
         <p className="text-center text-sm text-gray-400 mb-4">
-          {coins} <CoinIcon size={13} className="inline-block align-middle" /> total
+          {ranked} event{ranked !== 1 ? "s" : ""} ranked
         </p>
 
         <div className="space-y-1.5 mb-5">
@@ -53,10 +49,7 @@ export function TierModal({ coins, onClose }: Props) {
               >
                 <div className="flex items-center gap-2">
                   <span className="text-xl">{tier.emoji}</span>
-                  <span
-                    className="font-semibold"
-                    style={{ color: isCurrent ? tier.textColor : "#9ca3af" }}
-                  >
+                  <span className="font-semibold" style={{ color: isCurrent ? tier.textColor : "#9ca3af" }}>
                     {tier.name}
                   </span>
                   {isCurrent && (
@@ -65,10 +58,7 @@ export function TierModal({ coins, onClose }: Props) {
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-1 text-sm text-gray-400">
-                  <span>{tier.min.toLocaleString()}+</span>
-                  <CoinIcon size={13} />
-                </div>
+                <span className="text-sm text-gray-400">{tier.min}+ events</span>
               </div>
             )
           })}
@@ -76,7 +66,7 @@ export function TierModal({ coins, onClose }: Props) {
 
         {nextTier ? (
           <p className="text-center text-sm text-gray-500">
-            <span className="font-semibold text-gray-800">{coinsToNext}</span> more coins to reach{" "}
+            <span className="font-semibold text-gray-800">{toNext}</span> more events to reach{" "}
             {nextTier.emoji} <span style={{ color: nextTier.textColor }}>{nextTier.name}</span>
           </p>
         ) : (

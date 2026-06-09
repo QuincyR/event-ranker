@@ -84,6 +84,12 @@ export default function HomePage() {
             >
               Compare with Others
             </Link>
+            <Link
+              href="/customize"
+              className="px-3 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors whitespace-nowrap"
+            >
+              Customize Avatar
+            </Link>
           </div>
         </div>
 

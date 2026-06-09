@@ -13,6 +13,9 @@ model User {
   rankedEvents  String @default("[]")
   skippedEvents String @default("[]")
   coins         Int    @default(0)
+  character     String @default("blob")
+  equipped      String @default("[]")
+  purchased     String @default("[]")
 }
 
 model Event {

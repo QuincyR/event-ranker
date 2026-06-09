@@ -47,7 +47,15 @@ export default function SignInPage() {
       body: JSON.stringify({ name: selectedName }),
     })
     const u = await res.json()
-    localStorage.setItem("user", JSON.stringify({ id: u.id, name: u.name, coins: u.coins }))
+    localStorage.setItem("user", JSON.stringify({
+      id: u.id,
+      name: u.name,
+      coins: u.coins,
+      rankedCount: u.rankedCount ?? 0,
+      character: u.character ?? "blob",
+      equipped: u.equipped ?? [],
+      purchased: u.purchased ?? [],
+    }))
     if (u.isNew) {
       localStorage.setItem("pendingCoinGain", JSON.stringify({ from: 0, amount: u.coins }))
     }

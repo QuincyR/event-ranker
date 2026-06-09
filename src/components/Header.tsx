@@ -8,40 +8,51 @@ import { CoinAnimation, COIN_ANIM_DURATION_MS } from "./CoinAnimation"
 import { CoinIcon } from "./CoinIcon"
 import { TierBadge } from "./TierBadge"
 import { TierModal } from "./TierModal"
+import { MonsterAvatar } from "./MonsterAvatar"
 
-type User = { id: string; name: string; coins?: number }
+type UserLocal = {
+  id: string
+  name: string
+  coins?: number
+  rankedCount?: number
+  character?: string
+  equipped?: string[]
+}
 
 export function Header() {
   const pathname = usePathname()
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<UserLocal | null>(null)
   const [displayedCoins, setDisplayedCoins] = useState(0)
+  const [rankedCount, setRankedCount] = useState(0)
+  const [character, setCharacter] = useState("blob")
+  const [equipped, setEquipped] = useState<string[]>([])
   const [coinGain, setCoinGain] = useState<{ amount: number } | null>(null)
   const [bump, setBump] = useState(false)
   const [showTierModal, setShowTierModal] = useState(false)
   const countIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const displayedRef = useRef(0)   // mirrors displayedCoins for use inside event closures
-  const targetRef = useRef(0)       // current count-up target; mini events extend it
+  const displayedRef = useRef(0)
+  const targetRef = useRef(0)
 
-  // Keep user + coins in sync with localStorage on every navigation
   useEffect(() => {
     const stored = localStorage.getItem("user")
-    const u: User | null = stored ? JSON.parse(stored) : null
+    const u: UserLocal | null = stored ? JSON.parse(stored) : null
     setUser(u)
     if (u) {
       const coins = u.coins ?? 0
       displayedRef.current = coins
       setDisplayedCoins(coins)
+      setRankedCount(u.rankedCount ?? 0)
+      setCharacter(u.character ?? "blob")
+      setEquipped(u.equipped ?? [])
     }
   }, [pathname])
 
-  // Listen for coinGain events dispatched by any page
   useEffect(() => {
     function handleCoinGain(e: Event) {
       const { from, amount, mini } = (e as CustomEvent<{ from: number; amount: number; mini?: boolean }>).detail
 
       if (mini) {
         if (countIntervalRef.current) {
-          // A full animation is already counting up — just extend its target
           targetRef.current += amount
         } else {
           const newVal = from + amount
@@ -53,9 +64,6 @@ export function Header() {
         return
       }
 
-      // Full flying-coin animation.
-      // Start from the higher of `from` and the current displayed value so the
-      // counter never ticks backward if a mini bump already moved it forward.
       const safeStart = Math.max(from, displayedRef.current)
       displayedRef.current = safeStart
       setDisplayedCoins(safeStart)
@@ -103,12 +111,10 @@ export function Header() {
 
           {user && (
             <div className="flex items-center gap-3">
-              {/* Tier badge — click to see tier requirements */}
               <button onClick={() => setShowTierModal(true)} className="cursor-pointer">
-                <TierBadge coins={displayedCoins} />
+                <TierBadge ranked={rankedCount} />
               </button>
 
-              {/* Coin counter */}
               <div
                 id="coin-counter"
                 className="flex items-center gap-1.5 text-sm font-semibold text-yellow-400"
@@ -123,8 +129,8 @@ export function Header() {
                 className="flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors"
               >
                 <span className="hidden sm:block">{user.name}</span>
-                <div className="w-8 h-8 rounded-full bg-[#C8102E] text-white flex items-center justify-center text-sm font-bold">
-                  {user.name[0].toUpperCase()}
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-[#C8102E] flex-shrink-0">
+                  <MonsterAvatar character={character} equipped={equipped} size={32} />
                 </div>
               </Link>
             </div>
@@ -132,16 +138,12 @@ export function Header() {
         </div>
       </header>
 
-      {/* Coin animation overlay — rendered outside the header so it covers the full viewport */}
       {coinGain && (
-        <CoinAnimation
-          amount={coinGain.amount}
-          onComplete={() => setCoinGain(null)}
-        />
+        <CoinAnimation amount={coinGain.amount} onComplete={() => setCoinGain(null)} />
       )}
 
       {showTierModal && (
-        <TierModal coins={displayedCoins} onClose={() => setShowTierModal(false)} />
+        <TierModal ranked={rankedCount} onClose={() => setShowTierModal(false)} />
       )}
     </>
   )
