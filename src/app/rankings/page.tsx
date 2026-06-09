@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { CATEGORIES, NAMES, CATEGORY_SEASON_ORDER } from "@/lib/constants"
 import { MonsterAvatar } from "@/components/MonsterAvatar"
+import { TierBadge } from "@/components/TierBadge"
 
 type EventData = {
   id: string
@@ -24,8 +25,8 @@ type RankedItem = {
   rank: number | null
 }
 
-type User = { id: string; name: string; character?: string; equipped?: string[] }
-type Tab = "overall" | "mine" | "person" | "chronological" | "category"
+type User = { id: string; name: string; character?: string; equipped?: string[]; rankedCount?: number }
+type Tab = "overall" | "mine" | "person" | "chronological" | "category" | "whiffs"
 
 function EventRow({ rank, event, extra }: { rank?: number | null; event: EventData; extra?: string }) {
   const meta = [event.category, event.location].filter(Boolean).join(" · ")
@@ -114,6 +115,7 @@ export default function RankingsPage() {
   const tabs: { key: Tab; label: string }[] = [
     { key: "overall", label: "Overall" },
     { key: "mine", label: "My Ranking" },
+    { key: "whiffs", label: "Whiffs" },
     { key: "person", label: "By Person" },
     { key: "chronological", label: "Chronological" },
     { key: "category", label: "By Category" },
@@ -209,6 +211,28 @@ export default function RankingsPage() {
                 ))}
               </ol>
             )}
+          </div>
+        )}
+
+        {/* Whiffs status */}
+        {tab === "whiffs" && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <ul className="divide-y divide-gray-50">
+              {[...allUsers]
+                .sort((a, b) => (b.rankedCount ?? 0) - (a.rankedCount ?? 0))
+                .map((u) => (
+                  <li key={u.id} className="flex items-center gap-4 px-5 py-3">
+                    <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                      <MonsterAvatar character={u.character ?? "blob"} equipped={u.equipped ?? []} size={44} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 text-sm">{u.name}</p>
+                      <p className="text-xs text-gray-400">{u.rankedCount ?? 0} events ranked</p>
+                    </div>
+                    <TierBadge ranked={u.rankedCount ?? 0} />
+                  </li>
+                ))}
+            </ul>
           </div>
         )}
 

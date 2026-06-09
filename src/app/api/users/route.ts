@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 
 export async function GET() {
   const users = await prisma.user.findMany({
-    select: { id: true, name: true, character: true, equipped: true },
+    select: { id: true, name: true, character: true, equipped: true, rankedEvents: true },
     orderBy: { name: "asc" },
   })
   return NextResponse.json(
@@ -12,6 +12,7 @@ export async function GET() {
       name: u.name,
       character: u.character || "blob",
       equipped: (() => { try { return JSON.parse(u.equipped) as string[] } catch { return [] } })(),
+      rankedCount: (() => { try { return (JSON.parse(u.rankedEvents) as unknown[]).length } catch { return 0 } })(),
     }))
   )
 }
